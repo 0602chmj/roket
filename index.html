@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ROCKET LAB — 우주로 가는 도전</title>
+<style>
+:root{--bg:#04070f;--navy:#0a1430;--navy2:#101e44;--line:#1d3566;--teal:#41e0c9;--teal2:#1fa896;--ink:#d6e8ff;--dim:#7d93bd;--warn:#ffb454;--bad:#ff5470;--ok:#5dffa0;--blue:#6aa8ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Pretendard","Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+#app{position:fixed;inset:0;height:100dvh}
+canvas#scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+.screen{position:absolute;inset:0;display:none}
+.screen.on{display:block}
+button{font-family:inherit;color:var(--ink);cursor:pointer}
+.btn{background:linear-gradient(180deg,rgba(20,40,84,.9),rgba(10,22,52,.92));border:1px solid var(--line);border-radius:6px;padding:10px 16px;font-size:15px;font-weight:700;letter-spacing:.02em;transition:.15s;min-height:42px}
+.btn:hover:not(:disabled){border-color:var(--teal);box-shadow:0 0 14px rgba(65,224,201,.35);color:#fff}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.pri{background:linear-gradient(180deg,#27d6bd,#13917f);border-color:#6bf3dd;color:#02201c;text-shadow:none}
+.btn.pri:hover:not(:disabled){color:#02201c;box-shadow:0 0 22px rgba(65,224,201,.7)}
+.btn.danger{border-color:#7b2b3d}
+.btn.on{border-color:var(--teal);color:var(--teal);box-shadow:inset 0 0 10px rgba(65,224,201,.25)}
+.panel{background:rgba(6,14,34,.82);border:1px solid var(--line);border-radius:8px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.mono{font-family:"JetBrains Mono","Roboto Mono",Consolas,"D2Coding",monospace;font-variant-numeric:tabular-nums}
+
+/* ---------- 시작 화면 ---------- */
+#menu .box{position:absolute;left:0;right:0;bottom:0;padding:0 16px 5vh;display:flex;flex-direction:column;align-items:center;gap:14px}
+#menu .title{position:absolute;top:6vh;left:0;right:0;text-align:center;padding:0 12px}
+#menu h1{margin:0;font-size:clamp(34px,7vw,76px);letter-spacing:.14em;font-weight:900;background:linear-gradient(180deg,#fff,#7ff0de 55%,#2a86d6);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 18px rgba(65,224,201,.35))}
+#menu .sub{margin-top:6px;font-size:clamp(14px,2.2vw,22px);color:var(--teal);letter-spacing:.35em}
+#menu .btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+#menu .btns .btn{min-width:150px;font-size:17px;padding:13px 22px}
+#menu .rec{font-size:13px;color:var(--dim)}
+
+/* ---------- 연구소 ---------- */
+#lab{display:none}
+#lab.on{display:flex;flex-direction:row;gap:12px;padding:12px}
+#lab .col{display:flex;flex-direction:column;gap:10px;min-height:0}
+#labL{width:min(430px,34vw);min-width:330px}
+#labR{width:min(330px,28vw);min-width:270px}
+#labM{flex:1;position:relative;min-width:0}
+#labPreview{position:absolute;inset:34px 0 54px 0}
+#labM .cap{position:absolute;top:8px;left:0;right:0;text-align:center;font-size:13px;color:var(--teal);letter-spacing:.3em;pointer-events:none}
+#labM .acts{position:absolute;left:0;right:0;bottom:0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.scroll{overflow-y:auto;min-height:0;flex:1;padding:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.hd{font-size:13px;letter-spacing:.2em;color:var(--teal);margin:14px 0 8px;font-weight:700;display:flex;align-items:center;gap:8px}
+.hd:first-child{margin-top:0}
+.hd:after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.card{background:rgba(14,28,64,.7);border:1px solid var(--line);border-radius:7px;padding:9px 8px;text-align:left;font-size:12.5px;line-height:1.45;transition:.15s;position:relative;min-height:44px}
+.card b{display:block;font-size:14px;margin-bottom:2px}
+.card small{display:block;color:var(--dim);font-size:11.5px}
+.card:hover{border-color:#3b66b8}
+.card.sel{border-color:var(--teal);background:rgba(25,70,86,.55);box-shadow:0 0 12px rgba(65,224,201,.3)}
+.card .dot{position:absolute;top:8px;right:8px;width:9px;height:9px;border-radius:50%}
+.toggle{display:flex;gap:8px}
+.toggle .btn{flex:1;font-size:14px;padding:8px}
+.row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:1px solid rgba(29,53,102,.6);font-size:14px;gap:8px}
+.row span:first-child{color:var(--dim);font-size:13px}
+.row b{font-weight:700}
+.bar{height:7px;border-radius:4px;background:#0a1a3c;border:1px solid var(--line);overflow:hidden;margin:4px 0 8px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal2),var(--teal));width:0;transition:width .25s}
+.note{font-size:12.5px;color:var(--dim);line-height:1.55;margin-top:8px}
+#verdict{margin-top:10px;padding:10px;border-radius:7px;border:1px solid var(--line);font-size:13.5px;line-height:1.5}
+#labBack{position:absolute;left:0;top:0;z-index:3;padding:6px 12px;min-height:36px;font-size:13px}
+.good{color:var(--ok)}.mid{color:var(--warn)}.bad{color:var(--bad)}
+
+/* ---------- 비행 HUD ---------- */
+#flight{pointer-events:none}
+#flight .panel,#flight button,#flight input{pointer-events:auto}
+#iL{position:absolute;left:10px;top:10px;width:232px;padding:10px 12px;font-size:13px}
+#iL .grp{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
+.m{line-height:1.15}.m small{display:block;color:var(--dim);font-size:11px;letter-spacing:.06em;margin-bottom:1px}
+.m b{font-size:18px;font-weight:700}.m b em{font-style:normal;font-size:11px;color:var(--dim);margin-left:2px}
+.m.big{grid-column:1/-1}.m.big b{font-size:26px;color:#fff}
+.gauge{margin-top:8px}
+.gauge .gl{display:flex;justify-content:space-between;font-size:11.5px;color:var(--dim)}
+.gauge .gl b{color:var(--ink);font-weight:700}
+#iR{position:absolute;right:10px;top:10px;width:226px;display:flex;flex-direction:column;gap:8px}
+#mapBox{padding:6px}
+#mapBox canvas{width:100%;display:block;border-radius:6px;background:rgba(2,6,16,.7)}
+#mapBox .ml{display:flex;justify-content:space-between;font-size:11.5px;color:var(--dim);padding:4px 4px 0}
+#missions{padding:8px 10px;font-size:13px}
+#missions h3,#iL h3{margin:0 0 6px;font-size:12px;letter-spacing:.2em;color:var(--teal)}
+.ms{display:flex;gap:8px;align-items:center;padding:3px 0;color:var(--dim)}
+.ms i{width:16px;height:16px;border:1.5px solid var(--line);border-radius:50%;flex:none;display:grid;place-items:center;font-style:normal;font-size:11px;color:transparent}
+.ms.cur{color:var(--ink)}.ms.cur i{border-color:var(--teal)}
+.ms.done{color:var(--ok)}.ms.done i{background:var(--ok);border-color:var(--ok);color:#022}
+#topC{position:absolute;left:50%;top:10px;transform:translateX(-50%);text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;max-width:calc(100vw - 500px)}
+#status{padding:6px 18px;font-size:14px;font-weight:700;letter-spacing:.08em;white-space:nowrap}
+#tplus{font-size:22px;font-weight:700;color:#fff;text-shadow:0 0 10px #000}
+#hint{font-size:13.5px;color:var(--ink);background:rgba(4,10,26,.75);border:1px solid var(--line);padding:6px 12px;border-radius:6px;text-align:center;line-height:1.4;max-width:560px}
+#warn{position:absolute;left:50%;top:132px;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none}
+.wn{padding:7px 16px;border-radius:6px;background:rgba(80,10,26,.88);border:1px solid var(--bad);color:#ffd5dc;font-weight:700;font-size:14px;animation:blink .7s infinite alternate}
+.wn.y{background:rgba(70,48,6,.88);border-color:var(--warn);color:#ffe9c4}
+@keyframes blink{from{opacity:1}to{opacity:.45}}
+#toasts{position:absolute;left:50%;top:38%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:92vw}
+.toast{background:rgba(6,18,40,.88);border:1px solid var(--teal);border-radius:8px;padding:9px 20px;font-size:17px;font-weight:700;color:#fff;box-shadow:0 0 20px rgba(65,224,201,.35);animation:tin .35s ease-out,tout .5s 3.2s forwards;text-align:center}
+.toast.big{font-size:24px;padding:12px 28px;border-color:var(--ok);box-shadow:0 0 28px rgba(93,255,160,.5)}
+.toast.bad{border-color:var(--bad);box-shadow:0 0 20px rgba(255,84,112,.4)}
+@keyframes tin{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes tout{to{opacity:0;transform:translateY(-8px)}}
+#cd{position:absolute;left:0;right:0;top:20%;text-align:center;pointer-events:none;display:none}
+#cd b{font-size:clamp(90px,18vw,200px);font-weight:900;color:#fff;text-shadow:0 0 40px rgba(65,224,201,.8);line-height:1}
+#cd small{display:block;font-size:18px;letter-spacing:.4em;color:var(--teal);margin-top:6px}
+#bar{position:absolute;left:0;right:0;bottom:0;padding:8px 10px calc(8px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:flex-end;justify-content:center;flex-wrap:wrap;pointer-events:none}
+#bar .grp{display:flex;gap:6px;align-items:stretch;pointer-events:auto;padding:6px;flex-wrap:wrap;justify-content:center}
+#bar .btn{padding:8px 12px;font-size:14px;min-height:44px;min-width:46px}
+#bar .btn small{display:block;font-size:10.5px;font-weight:400;color:var(--dim);margin-top:1px}
+#thrBox{display:flex;align-items:center;gap:8px;padding:0 6px}
+#thrBox .tv{width:56px;text-align:center;font-size:20px;font-weight:700;color:var(--teal)}
+#thr{-webkit-appearance:none;appearance:none;width:170px;height:8px;border-radius:4px;background:linear-gradient(90deg,#10264f,#1b6a78);border:1px solid var(--line);outline:none}
+#thr::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:var(--teal);border:2px solid #fff;cursor:pointer}
+#thr::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--teal);border:2px solid #fff;cursor:pointer}
+#launchWrap{position:absolute;left:50%;bottom:112px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px}
+#launchBtn{font-size:22px;padding:16px 46px;letter-spacing:.2em}
+#launchMsg{font-size:13px;color:var(--dim);text-align:center;max-width:90vw}
+#pauseV{position:absolute;inset:0;display:none;place-items:center;background:rgba(2,6,16,.6);pointer-events:auto}
+#pauseV .panel{padding:26px 38px;text-align:center}
+#pauseV h2{margin:0 0 14px;letter-spacing:.3em}
+
+/* ---------- 결과 / 도움말 ---------- */
+.ov{position:absolute;inset:0;display:none;place-items:center;background:rgba(2,6,16,.72);z-index:20;padding:12px;overflow:auto}
+.ov.on{display:grid}
+.ov .panel{padding:22px 26px;max-width:620px;width:100%;max-height:96dvh;overflow:auto}
+.ov h2{margin:0 0 4px;font-size:26px;letter-spacing:.12em}
+.ov .sub{color:var(--dim);font-size:14px;margin-bottom:14px;line-height:1.55}
+.ov .stats{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;margin:8px 0 14px}
+.ov .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+#res.win h2{color:var(--ok)}#res.lose h2{color:var(--bad)}
+.tip{margin:10px 0;padding:10px 12px;background:rgba(65,224,201,.08);border-left:3px solid var(--teal);font-size:14px;line-height:1.6}
+#help table{border-collapse:collapse;width:100%;font-size:14px;margin:6px 0 12px}
+#help td{padding:6px 8px;border-bottom:1px solid rgba(29,53,102,.7);vertical-align:top;line-height:1.5}
+#help td:first-child{white-space:nowrap;color:var(--teal);font-weight:700;width:1%}
+#help h3{margin:14px 0 6px;font-size:14px;letter-spacing:.15em;color:var(--teal)}
+#help p{margin:6px 0;font-size:14px;line-height:1.65}
+kbd{background:#12254f;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:1px 7px;font-family:inherit;font-size:13px;color:#fff}
+#fsBtn{position:absolute;right:10px;top:10px;z-index:5;display:block}
+
+/* ---------- 반응형 ---------- */
+@media (max-width:980px){
+  #labL{width:min(380px,44vw)} #labR{width:min(280px,36vw);min-width:230px}
+}
+@media (max-width:760px){
+  #lab.on{flex-direction:column;overflow-y:auto;padding:8px;gap:8px}
+  #lab .col{width:100%!important;min-width:0!important;flex:none}
+  #labM{height:36vh;order:0}#labL{order:1}#labR{order:2}
+  .scroll{overflow:visible;flex:none}
+  #labPreview{inset:40px 0 50px 0}
+  #iL{width:150px;padding:6px 8px;font-size:11px;top:100px;left:6px}
+  #iL .grp{gap:3px 6px}.m b{font-size:14px}.m.big b{font-size:19px}.m small{font-size:9px}
+  #iL .hideM,#iL #vNote{display:none}
+  #iR{width:132px;right:6px;top:100px}
+  #missions{display:none}
+  #mapBox .ml{font-size:9.5px;white-space:nowrap;padding:3px 2px 0}
+  #topC{max-width:96vw;top:6px;gap:4px;width:96vw}
+  #topC #tplus{font-size:18px}
+  #status{font-size:12px;padding:4px 10px}
+  #hint{font-size:11.5px;padding:4px 8px;max-width:96vw}
+  #warn{top:330px}
+  #bar .btn{padding:6px 8px;font-size:13px;min-height:42px;min-width:40px}
+  #bar .btn small{display:none}
+  #thr{width:110px}
+  #bar{gap:6px;padding:6px}
+  #launchWrap{bottom:250px}
+  .toast{font-size:14px;padding:7px 12px}
+  #toasts{top:36%}
+  #menu .btns .btn{min-width:130px;font-size:15px}
+}
+@media (max-height:560px),(max-width:760px){ #bar .lb{display:none} }
+@media (max-height:560px) and (min-width:761px){
+  #iL{width:176px;padding:6px 8px;top:6px;left:6px;font-size:11px}
+  #iL .grp{gap:3px 6px}.m b{font-size:14px}.m.big b{font-size:19px}.m small{font-size:9px}
+  #iL .hideM,#iL #vNote{display:none}
+  .gauge{margin-top:4px}.bar{margin:2px 0 4px;height:5px}
+  #iR{width:150px;right:6px;top:6px}#missions{display:none}
+  #topC{max-width:calc(100vw - 380px);top:4px;gap:4px}
+  #status{font-size:12px;padding:3px 10px}#tplus{font-size:16px}
+  #hint{font-size:11.5px;padding:4px 8px}
+  #warn{top:92px}
+  #bar{padding:4px 6px;gap:5px;flex-wrap:nowrap;justify-content:center}
+  #bar .grp{padding:3px;gap:4px;flex-wrap:nowrap}
+  #bar .btn{padding:4px 8px;font-size:13px;min-height:38px;min-width:38px}
+  #bar .btn small{display:none}
+  #thr{width:90px}#thrBox .tv{width:44px;font-size:15px}
+  #launchWrap{bottom:58px}#launchBtn{font-size:17px;padding:10px 30px}
+  .toast{font-size:14px;padding:6px 14px}#toasts{top:30%}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="scene"></canvas>
+
+  <!-- 시작 화면 -->
+  <section id="menu" class="screen on">
+    <div class="title"><h1>ROCKET LAB</h1><div class="sub">우주로 가는 도전</div></div>
+    <div class="box">
+      <div class="btns">
+        <button class="btn pri" id="mStart">▶ 게임 시작</button>
+        <button class="btn" id="mLab">🔧 로켓 연구소</button>
+        <button class="btn" id="mHelp">❓ 조작 방법</button>
+      </div>
+      <div class="rec" id="mRec"></div>
+    </div>
+  </section>
+
+  <!-- 로켓 연구소 -->
+  <section id="lab" class="screen">
+    <div class="col" id="labL">
+      <div class="panel scroll">
+        <div class="hd">1단 엔진</div><div class="cards" id="cE1"></div>
+        <div class="hd">1단 연료탱크</div><div class="cards" id="cT1"></div>
+        <div class="hd">2단 구성</div>
+        <div class="toggle"><button class="btn" id="twoOn">2단 사용</button><button class="btn" id="twoOff">1단만 (단단식)</button></div>
+        <div id="stage2Opts">
+          <div class="hd">2단 엔진</div><div class="cards" id="cE2"></div>
+          <div class="hd">2단 연료탱크</div><div class="cards" id="cT2"></div>
+        </div>
+        <div class="note">💡 엔진이 크면 힘은 세지만 무겁고 연료를 빨리 먹어요. 2단 로켓은 다 쓴 1단을 버려서 가벼워진 채로 더 멀리 갑니다.</div>
+      </div>
+    </div>
+    <div class="col" id="labM">
+      <button class="btn" id="labBack">← 처음 화면</button>
+      <div class="cap">— 로 켓  조 립 동 —</div>
+      <div id="labPreview"></div>
+      <div class="acts">
+        <button class="btn" id="bSave">💾 설계 저장</button>
+        <button class="btn" id="bLoad">📂 불러오기</button>
+        <button class="btn danger" id="bReset">↺ 초기화</button>
+      </div>
+    </div>
+    <div class="col" id="labR">
+      <div class="panel scroll">
+        <div class="hd">성능 분석</div>
+        <div class="row"><span>전체 질량</span><b class="mono" id="sMass"></b></div>
+        <div class="row"><span>연료량 (1단 / 2단)</span><b class="mono" id="sFuel"></b></div>
+        <div class="row"><span>추력 (해수면)</span><b class="mono" id="sThr"></b></div>
+        <div class="row"><span>추력 (진공)</span><b class="mono" id="sThrV"></b></div>
+        <div class="row"><span>추력 대 중량비 TWR</span><b class="mono" id="sTwr"></b></div>
+        <div class="row"><span>연소 시간 (1단 / 2단)</span><b class="mono" id="sBurn"></b></div>
+        <div class="row"><span>총 속도 변화 Δv</span><b class="mono" id="sDv"></b></div>
+        <div class="bar"><i id="dvBar"></i></div>
+        <div class="note" style="margin-top:0">Δv 목표선 ≈ 9.4 km/s (궤도 속도 7.8 km/s + 중력·공기저항 손실)</div>
+        <div id="verdict"></div>
+        <button class="btn pri" id="goLaunch" style="width:100%;margin-top:12px;font-size:17px;padding:13px">🚀 발사대로 이동</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 비행 -->
+  <section id="flight" class="screen">
+    <div id="iL" class="panel">
+      <h3>계기판 · FLIGHT DATA</h3>
+      <div class="grp">
+        <div class="m big"><small>고도 ALTITUDE</small><b class="mono" id="vAlt">0</b></div>
+        <div class="m"><small>속도 SPEED</small><b class="mono" id="vSpd">0</b></div>
+        <div class="m"><small>가속도</small><b class="mono" id="vAcc">0</b></div>
+        <div class="m"><small>수직 속도</small><b class="mono" id="vVr">0</b></div>
+        <div class="m"><small>수평 속도</small><b class="mono" id="vVt">0</b></div>
+        <div class="m hideM"><small>최고 고도</small><b class="mono" id="vMax">0</b></div>
+        <div class="m hideM"><small>받음각 AoA</small><b class="mono" id="vAoa">0</b></div>
+      </div>
+      <div class="gauge"><div class="gl"><span>엔진 출력</span><b class="mono" id="gThrT">0%</b></div><div class="bar"><i id="gThr"></i></div></div>
+      <div class="gauge"><div class="gl"><span>남은 연료 (전체)</span><b class="mono" id="gFuelT">100%</b></div><div class="bar"><i id="gFuel"></i></div></div>
+      <div class="gauge hideM"><div class="gl"><span>수평속도 / 궤도속도</span><b class="mono" id="gOrbT">0%</b></div><div class="bar"><i id="gOrb"></i></div></div>
+      <div class="gauge hideM" style="margin-top:2px"><div class="gl"><span>로켓 상태</span></div></div>
+      <div class="note mono" id="vNote" style="margin:0;color:var(--ink);font-size:12.5px"></div>
+    </div>
+    <div id="topC">
+      <div id="tplus" class="mono">T-00:10</div>
+      <div id="status" class="panel">발사 대기</div>
+      <div id="hint"></div>
+    </div>
+    <div id="warn"></div>
+    <div id="iR">
+      <div id="mapBox" class="panel"><canvas id="map" width="420" height="420"></canvas>
+        <div class="ml mono"><span id="mapA">근지점 –</span><span id="mapB">원지점 –</span></div></div>
+      <div id="missions" class="panel"><h3>임무 · MISSION</h3><div id="msList"></div></div>
+    </div>
+    <div id="cd"><b id="cdN">10</b><small>COUNTDOWN</small></div>
+    <div id="toasts"></div>
+    <div id="launchWrap">
+      <button class="btn pri" id="launchBtn">🚀 발사</button>
+      <div id="launchMsg"></div>
+    </div>
+    <div id="bar">
+      <div class="grp panel">
+        <button class="btn" id="bLeft">◀<small>A</small></button>
+        <button class="btn" id="bRight">▶<small>D</small></button>
+      </div>
+      <div class="grp panel" id="thrBox">
+        <button class="btn" id="bThrDn">－<small>S</small></button>
+        <input type="range" id="thr" min="0" max="100" value="100" aria-label="엔진 출력">
+        <button class="btn" id="bThrUp">＋<small>W</small></button>
+        <div class="tv mono" id="thrV">100%</div>
+      </div>
+      <div class="grp panel">
+        <button class="btn" id="bEng">🔥<span class="lb"> 점화/정지</span><small>SPACE</small></button>
+        <button class="btn" id="bSep">⛓<span class="lb"> 단 분리</span><small>X</small></button>
+        <button class="btn" id="bSat">🛰<span class="lb"> 위성 분리</span><small>Z</small></button>
+        <button class="btn" id="bAuto">🤖<span class="lb"> 자동</span><small>G</small></button>
+        <button class="btn" id="bWarp">⏩ ×1<small>T</small></button>
+      </div>
+      <div class="grp panel">
+        <button class="btn" id="bPause">⏸<small>P</small></button>
+        <button class="btn" id="bRestart">↻<small>R</small></button>
+        <button class="btn" id="bSnd">🔊</button>
+        <button class="btn" id="bHelp">?</button>
+        <button class="btn" id="bLabF">🔧</button>
+      </div>
+    </div>
+    <div id="pauseV"><div class="panel"><h2>일시정지</h2><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn pri" id="pvResume">계속하기</button><button class="btn" id="pvLab">연구소로</button></div></div></div>
+  </section>
+
+  <!-- 결과 -->
+  <div id="res" class="ov"><div class="panel">
+    <h2 id="resT"></h2><div class="sub" id="resS"></div>
+    <div class="stats" id="resStats"></div>
+    <div class="tip" id="resTip"></div>
+    <div class="acts" id="resActs"></div>
+  </div></div>
+
+  <!-- 도움말 -->
+  <div id="help" class="ov"><div class="panel">
+    <h2>조작 방법</h2>
+    <div class="sub">목표: 로켓을 설계하고 발사해서 지구 저궤도(근지점 150 km 이상)에 안정적으로 진입한 뒤 위성을 분리하세요.</div>
+    <table>
+      <tr><td><kbd>W</kbd> / <kbd>S</kbd></td><td>엔진 출력 증가 / 감소 (화면 아래 슬라이더로도 조절)</td></tr>
+      <tr><td><kbd>A</kbd> / <kbd>D</kbd></td><td>로켓 기울이기 — A: 위쪽(수직)으로, D: 오른쪽(수평·진행 방향)으로</td></tr>
+      <tr><td><kbd>SPACE</kbd></td><td>엔진 점화 / 정지</td></tr>
+      <tr><td><kbd>X</kbd></td><td>1단 분리 (연료가 다 떨어지면 분리하세요)</td></tr>
+      <tr><td><kbd>Z</kbd></td><td>위성 분리 (안정 궤도에서만 가능)</td></tr>
+      <tr><td><kbd>G</kbd></td><td>자동 조종(어시스트) 켜기/끄기 — 기울기·단 분리·엔진 정지를 도와줘요</td></tr>
+      <tr><td><kbd>T</kbd></td><td>시간 가속 ×1 / ×2 / ×5 / ×10</td></tr>
+      <tr><td><kbd>P</kbd> · <kbd>R</kbd></td><td>일시정지 · 처음 상태로 다시 시작</td></tr>
+    </table>
+    <h3>궤도에 가는 원리</h3>
+    <p>위로 높이만 올라가면 다시 떨어져요. 지구 둘레를 따라 <b>옆으로 약 7.8 km/s</b> 이상 빠르게 달려야 떨어지는 만큼 지구 표면이 휘어져 내려가 계속 돌 수 있습니다. 이것이 궤도입니다.</p>
+    <p>1) 처음엔 똑바로 올라가 두꺼운 대기를 벗어나고, 2) 고도가 오를수록 천천히 기울여 3) 우주(100 km 이상)에서는 거의 수평으로 가속합니다. 속도가 빠른 낮은 대기에서 급히 기울이면 공기 힘 때문에 기체가 부서져요(Max-Q).</p>
+    <h3>팁</h3>
+    <p>• 화면의 <b>초록 눈금</b>이 추천 기울기입니다. 직접 조종이 어렵다면 <kbd>G</kbd>(자동 조종)를 켜세요.<br>• 오른쪽 위 궤도 지도의 점선이 지금 엔진을 끄면 그려질 궤적이에요. 점선이 지구에 닿지 않아야 합니다.<br>• TWR(추력 대 중량비)이 1보다 작으면 이륙할 수 없어요.</p>
+    <div class="acts"><button class="btn pri" id="helpClose">닫기</button></div>
+  </div></div>
+  <button class="btn" id="fsBtn" title="전체 화면" style="padding:4px 10px;min-height:32px;font-size:13px">⛶</button>
+</div>
+<script>
+/*==PHYSICS-START==*/
+/* ============================================================
+   물리 엔진 (렌더링과 완전히 분리) — 교육용으로 단순화한 2D 궤도 역학
+   좌표계: 지구 중심이 원점, 발사대는 (0, RE). +x 방향이 '동쪽(진행 방향)'.
+   ============================================================ */
+const G0 = 9.80665;            // 표준 중력가속도 (Isp 계산용)
+const MU = 3.986004418e14;     // 지구 중력상수 GM (m^3/s^2)
+const RE = 6371000;            // 지구 반지름 (m)
+const RHO0 = 1.225;            // 해수면 대기 밀도 (kg/m^3)
+const HSCALE = 7200;           // 대기 규모 고도 (m) : rho = rho0 * exp(-h/H)
+const KARMAN = 100000;         // 카르만선 (m)
+const TARGET_ALT = 200000;     // 목표 궤도 고도 (m)
+const MIN_PERIGEE = 150000;    // 안정 궤도로 인정하는 최소 근지점 고도 (m)
+const SAT_MASS = 1000, FAIRING_MASS = 600, STRUCT_RATIO = 0.075;
+const UPPER_THRUST = 0.22, UPPER_MASS = 0.30;   // 2단용 진공 엔진 개량형(추력/질량 비율)
+const REF_AREA = 10.8;         // 로켓 단면적 (m^2)
+const WARP_STEPS = [1, 2, 5, 10];
+
+const ENGINES = [
+  { id: 'eco', name: '에코 EV-1',  tag: '저추력 · 고효율', F: 1100e3, ispSL: 300, ispVac: 360, mass: 1200, color: '#41e0c9' },
+  { id: 'bal', name: '밸런스 BL-3', tag: '균형형',          F: 2200e3, ispSL: 280, ispVac: 315, mass: 1900, color: '#6aa8ff' },
+  { id: 'pow', name: '파워 HX-9',  tag: '고추력형',        F: 3400e3, ispSL: 255, ispVac: 285, mass: 3000, color: '#ff8a5c' }
+];
+const TANKS1 = [ { name: '소형', fuel: 70e3 }, { name: '중형', fuel: 110e3 }, { name: '대형', fuel: 160e3 } ];
+const TANKS2 = [ { name: '소형', fuel: 8e3 },  { name: '중형', fuel: 16e3 },  { name: '대형', fuel: 26e3 } ];
+
+function defaultDesign() { return { e1: 1, t1: 1, two: true, e2: 0, t2: 1 }; }
+
+function atmosphere(h) {
+  const hh = Math.max(0, h);
+  const rho = RHO0 * Math.exp(-hh / HSCALE);
+  const T = Math.max(216.65, 288.15 - 0.0065 * hh);
+  return { rho, a: Math.sqrt(401.87 * T) };
+}
+function dragCd(mach) { return 0.26 + 0.34 * Math.exp(-Math.pow((mach - 1.1) / 0.45, 2)); }
+
+/* 설계 → 성능 요약 (연구소 화면에서 실시간 표시) */
+function vehicleStats(d) {
+  const E1 = ENGINES[d.e1], E2 = ENGINES[d.e2];
+  const fuel1 = TANKS1[d.t1].fuel;
+  const dry1 = fuel1 * STRUCT_RATIO + E1.mass;
+  const fuel2 = d.two ? TANKS2[d.t2].fuel : 0;
+  const dry2 = d.two ? fuel2 * STRUCT_RATIO + E2.mass * UPPER_MASS : 0;
+  const payload = SAT_MASS + FAIRING_MASS;
+  const mTotal = payload + dry2 + fuel2 + dry1 + fuel1;
+  const mdot1 = E1.F / (G0 * E1.ispVac);
+  const thrustSL = mdot1 * G0 * E1.ispSL;
+  const thrustVac = E1.F;
+  const twr = thrustSL / (mTotal * G0);
+  const ve1 = G0 * (0.4 * E1.ispSL + 0.6 * E1.ispVac);
+  const dv1 = ve1 * Math.log(mTotal / (mTotal - fuel1));
+  let dv2 = 0, thrust2 = 0, twr2 = 0;
+  if (d.two) {
+    const m2 = payload + dry2 + fuel2;
+    thrust2 = E2.F * UPPER_THRUST;
+    twr2 = thrust2 / (m2 * G0);
+    dv2 = G0 * E2.ispVac * Math.log(m2 / (m2 - fuel2));
+  }
+  return { mTotal, fuelTotal: fuel1 + fuel2, fuel1, fuel2, dry1, dry2, payload, thrustSL, thrustVac, thrust2, twr, twr2,
+           dv1, dv2, dvTotal: dv1 + dv2, burn1: fuel1 / mdot1,
+           burn2: d.two ? fuel2 / (E2.F * UPPER_THRUST / (G0 * E2.ispVac)) : 0 };
+}
+
+/* 케플러 궤도 요소 */
+function orbitElements(x, y, vx, vy) {
+  const r = Math.hypot(x, y), v2 = vx * vx + vy * vy;
+  const eps = v2 / 2 - MU / r;
+  const hm = Math.abs(x * vy - y * vx);
+  const e = Math.sqrt(Math.max(0, 1 + 2 * eps * hm * hm / (MU * MU)));
+  const rp = hm * hm / (MU * (1 + e));
+  const ra = e < 1 ? hm * hm / (MU * (1 - e)) : Infinity;
+  return { r, eps, h: hm, e, rp, ra, perigeeAlt: rp - RE, apogeeAlt: ra - RE, bound: eps < 0,
+           period: eps < 0 ? 2 * Math.PI * Math.sqrt(Math.pow(-MU / (2 * eps), 3) / MU) : Infinity };
+}
+function circularSpeed(h) { return Math.sqrt(MU / (RE + h)); }
+function gravityAt(h) { return MU / Math.pow(RE + h, 2); }
+
+function createSim(design) {
+  const st = vehicleStats(design);
+  return {
+    design: { ...design }, st,
+    phase: 'pad',            // pad → countdown → flight → (won | failed)
+    cd: 10, clamp: true, hasLifted: false,
+    t: 0, x: 0, y: RE, vx: 0, vy: 0,
+    pitch: 0, throttle: 1, engineOn: false, ign: 0, ignDelay: 0,
+    stage1: true, hasStage2: design.two,
+    fuel1: st.fuel1, fuel2: st.fuel2, dry1: st.dry1, dry2: st.dry2,
+    fairing: true, sat: true, satellite: null,
+    debris: [], events: [],
+    maxAlt: 0, maxQ: 0, maxSpeed: 0,
+    missions: [false, false, false, false, false], orbitHold: 0, stableOrbit: false,
+    thrustNow: 0, accNow: 0, gNow: G0, q: 0, aoa: 0, mach: 0, vr: 0, vt: 0, alt: 0, speed: 0,
+    status: '발사 대기', failReason: null, autopilot: false, lowFuelWarned: [false, false],
+    stageFuelEmpty: false
+  };
+}
+function massOf(s) {
+  return (s.sat ? SAT_MASS : 0) + (s.fairing ? FAIRING_MASS : 0) +
+         (s.hasStage2 ? s.dry2 + s.fuel2 : 0) + (s.stage1 ? s.dry1 + s.fuel1 : 0);
+}
+function activeEngine(s) {
+  if (s.stage1) return { stage: 1, E: ENGINES[s.design.e1], k: 1 };
+  if (s.hasStage2) return { stage: 2, E: ENGINES[s.design.e2], k: UPPER_THRUST };
+  return null;
+}
+function emit(s, type, data) { s.events.push({ type, data: data === undefined ? null : data }); }
+function pushDebris(s, type, dvx, dvy, mass) {
+  s.debris.push({ type, x: s.x, y: s.y, vx: s.vx + dvx, vy: s.vy + dvy, mass, rot: s.pitch, rotv: (Math.random() - 0.5) * 40, life: 0 });
+}
+function localFrame(x, y) { const r = Math.hypot(x, y); return { r, ux: x / r, uy: y / r, ex: y / r, ey: -x / r }; }
+
+/* ----- 사용자 조작 (UI에서 호출) ----- */
+function startCountdown(s) { if (s.phase === 'pad') { s.phase = 'countdown'; s.cd = 10; s.status = '카운트다운'; emit(s, 'countdown'); } }
+function toggleEngine(s) {
+  if (s.phase !== 'flight' && s.phase !== 'countdown') return;
+  const ae = activeEngine(s); if (!ae) return;
+  s.engineOn = !s.engineOn;
+  if (s.engineOn && !s.stageFuelEmpty) emit(s, 'ignite'); else emit(s, 'cutoff');
+}
+function separateStage(s) {
+  if (s.phase !== 'flight' || !s.stage1) return false;
+  if (!s.hasStage2) { emit(s, 'msg', '분리할 2단이 없습니다'); return false; }
+  const fx = Math.cos(s.pitch * Math.PI / 180), fl = localFrame(s.x, s.y);
+  const p = s.pitch * Math.PI / 180, dx = Math.cos(p) * fl.ux + Math.sin(p) * fl.ex, dy = Math.cos(p) * fl.uy + Math.sin(p) * fl.ey;
+  pushDebris(s, 's1', -dx * 3, -dy * 3, s.dry1 + s.fuel1);
+  s.stage1 = false; s.ign = 0; s.ignDelay = 1.5; s.stageFuelEmpty = s.fuel2 <= 0; s.lowFuelWarned[1] = false;
+  emit(s, 'stageSep');
+  return true;
+}
+function deploySatellite(s) {
+  if (s.phase !== 'flight' || !s.sat) return false;
+  if (!s.stableOrbit) { emit(s, 'msg', '안정 궤도에 진입한 뒤에 분리할 수 있어요 (근지점 150km 이상)'); return false; }
+  const fl = localFrame(s.x, s.y), p = s.pitch * Math.PI / 180;
+  const dx = Math.cos(p) * fl.ux + Math.sin(p) * fl.ex, dy = Math.cos(p) * fl.uy + Math.sin(p) * fl.ey;
+  s.satellite = { x: s.x, y: s.y, vx: s.vx + dx * 1.5, vy: s.vy + dy * 1.5, trail: [] };
+  s.sat = false;
+  emit(s, 'satDeploy');
+  return true;
+}
+function cycleWarp(cur) { const i = WARP_STEPS.indexOf(cur); return WARP_STEPS[(i + 1) % WARP_STEPS.length]; }
+
+/* ----- 조작 입력 적용 (키/버튼 → 피치·출력) ----- */
+function applyControls(s, c, dt) {
+  if (s.phase === 'ended') return;
+  if (c.thr) s.throttle = Math.max(0, Math.min(1, s.throttle + c.thr * 0.45 * dt));
+  const manualPitch = c.pitch !== 0;
+  if (manualPitch && (s.hasLifted || s.phase === 'flight')) {
+    s.pitch = Math.max(-30, Math.min(120, s.pitch + c.pitch * 9 * dt));
+  } else if (s.autopilot && s.phase === 'flight') {
+    const g = guidePitch(s);
+    const d = g - s.pitch, m = 6 * dt;
+    s.pitch += Math.abs(d) < m ? d : Math.sign(d) * m;
+  }
+}
+
+/* 자동 조종(어시스트): 중력선회 피치 프로그램 + 자동 단분리 + 목표 궤도 도달 시 엔진 정지 */
+function guidePitch(s) {
+  const h = s.alt, vr = s.vr;
+  if (h < 400) return 0;
+  const p0 = Math.min(88, 90 * Math.sqrt(Math.max(0, (h - 400) / GUIDE_H)));
+  if (h < GUIDE_BLEND0) return p0;
+  const vrT = Math.max(0, (GUIDE_ALT - h)) * GUIDE_K;
+  const pf = 90 + Math.max(-30, Math.min(25, (vr - vrT) * GUIDE_GAIN));
+  const w = Math.min(1, (h - GUIDE_BLEND0) / (GUIDE_BLEND1 - GUIDE_BLEND0));
+  return p0 * (1 - w) + pf * w;
+}
+let GUIDE_H = 160000, GUIDE_BLEND0 = 80000, GUIDE_BLEND1 = 115000, GUIDE_ALT = 215000, GUIDE_K = 0.006, GUIDE_GAIN = 0.03;
+function autopilotActions(s) {
+  if (!s.autopilot || s.phase !== 'flight') return;
+  if (s.stage1 && s.hasStage2 && s.fuel1 <= 0) separateStage(s);
+  const o = orbitElements(s.x, s.y, s.vx, s.vy);
+  if (s.engineOn && o.bound && o.perigeeAlt >= 195000 && s.alt > 150000) { s.engineOn = false; emit(s, 'cutoff'); }
+}
+
+/* ----- 한 번의 물리 스텝 ----- */
+function step(s, dt) {
+  if (s.phase === 'ended') return;
+  const fl0 = localFrame(s.x, s.y);
+  const h = fl0.r - RE;
+
+  // 카운트다운 / 발사대
+  if (s.phase === 'countdown') {
+    s.cd -= dt;
+    if (s.cd <= 3 && !s.engineOn && !s.ignitedPad) { s.engineOn = true; s.ignitedPad = true; emit(s, 'ignite'); }
+    if (s.cd <= 0) {
+      const ae = activeEngine(s);
+      s.phase = 'flight'; s.clamp = false; s.t = 0; s.status = '이륙';
+      emit(s, 'liftoff');
+    }
+  }
+
+  // 엔진 출력 램프
+  const ae = activeEngine(s);
+  const fuelNow = ae ? (ae.stage === 1 ? s.fuel1 : s.fuel2) : 0;
+  s.stageFuelEmpty = !ae || fuelNow <= 0;
+  if (s.ignDelay > 0) s.ignDelay -= dt;
+  const wantOn = s.engineOn && !s.stageFuelEmpty && s.ignDelay <= 0 && ae;
+  s.ign = wantOn ? Math.min(1, s.ign + dt / 1.2) : Math.max(0, s.ign - dt / 0.35);
+
+  const m = massOf(s);
+  const fl = fl0, ux = fl.ux, uy = fl.uy, ex = fl.ex, ey = fl.ey;
+  const air = atmosphere(h);
+  const sp = Math.hypot(s.vx, s.vy);
+  const pr = s.pitch * Math.PI / 180;
+  const dx = Math.cos(pr) * ux + Math.sin(pr) * ex, dy = Math.cos(pr) * uy + Math.sin(pr) * ey;
+
+  // 추력과 연료 소모
+  let F = 0;
+  if (ae && s.ign > 0 && fuelNow > 0) {
+    const fv = ae.E.F * ae.k;
+    const mdotFull = fv / (G0 * ae.E.ispVac);
+    const isp = ae.E.ispVac - (ae.E.ispVac - ae.E.ispSL) * Math.min(1, air.rho / RHO0);
+    const mdot = mdotFull * s.throttle * s.ign;
+    F = mdot * G0 * isp;
+    let burn = mdot * dt;
+    if (ae.stage === 1) { s.fuel1 = Math.max(0, s.fuel1 - burn); if (s.fuel1 <= 0) { emit(s, 'burnout', 1); } }
+    else { s.fuel2 = Math.max(0, s.fuel2 - burn); if (s.fuel2 <= 0) { emit(s, 'burnout', 2); } }
+  }
+  s.thrustNow = F;
+
+  // 공기저항 (속도 제곱에 비례)
+  const mach = sp / air.a;
+  const Cd = dragCd(mach);
+  const qdyn = 0.5 * air.rho * sp * sp;
+  const dragF = qdyn * Cd * REF_AREA;
+  let ax = 0, ay = 0;
+  const g = MU / (fl.r * fl.r);
+  ax += -g * ux; ay += -g * uy;
+  ax += F / m * dx; ay += F / m * dy;
+  if (sp > 0.01) { ax -= dragF / m * s.vx / sp; ay -= dragF / m * s.vy / sp; }
+
+  s.gNow = g; s.q = qdyn; s.mach = mach;
+  s.accNow = Math.hypot(ax + g * ux, ay + g * uy);   // 고유 가속도(계기판 G 표시용: 중력 제외)
+
+  if (s.clamp) {
+    // 고정 장치에 묶여 있음 (연료만 소모)
+    s.vx = 0; s.vy = 0; s.x = 0; s.y = RE;
+  } else {
+    s.vx += ax * dt; s.vy += ay * dt;
+    s.x += s.vx * dt; s.y += s.vy * dt;
+  }
+
+  // 파생 값
+  const fl2 = localFrame(s.x, s.y);
+  s.alt = fl2.r - RE;
+  s.vr = s.vx * fl2.ux + s.vy * fl2.uy;
+  s.vt = s.vx * fl2.ex + s.vy * fl2.ey;
+  s.speed = Math.hypot(s.vx, s.vy);
+  if (s.speed > 30) {
+    const cosA = Math.max(-1, Math.min(1, (dx * s.vx + dy * s.vy) / s.speed));
+    s.aoa = Math.acos(cosA) * 180 / Math.PI;
+  } else s.aoa = 0;
+  if (s.phase === 'flight' || s.phase === 'won') {
+    s.t += dt;
+    s.maxAlt = Math.max(s.maxAlt, s.alt); s.maxQ = Math.max(s.maxQ, qdyn); s.maxSpeed = Math.max(s.maxSpeed, s.speed);
+    if (s.alt > 20) s.hasLifted = true;
+  }
+
+  // 지면 접촉
+  if (fl2.r <= RE && !s.clamp) {
+    if (!s.hasLifted) { s.x = 0; s.y = RE; s.vx = 0; s.vy = 0;
+      if (!s.padWarned && s.engineOn && s.ign > 0.9 && F < m * G0) { s.padWarned = true; emit(s, 'msg', '추력이 중량보다 작아 이륙하지 못합니다 (TWR < 1)'); }
+    } else if (s.phase === 'flight') { fail(s, 'crash', '로켓이 지표면에 추락했습니다'); }
+  }
+
+  // 공력 파괴 (최대동압 부근에서 받음각이 너무 클 때)
+  if (s.phase === 'flight' && qdyn > 25000 && s.aoa > 30) fail(s, 'breakup', '최대 동압(Max-Q) 구간에서 받음각이 너무 커서 기체가 공중 분해되었습니다');
+
+  // 페어링 분리 (대기가 거의 없는 고도)
+  if (s.fairing && s.alt > 110000) {
+    s.fairing = false;
+    pushDebris(s, 'fairL', -ux * 0 - ex * 2, -uy * 0 - ey * 2, 300);
+    pushDebris(s, 'fairR', ex * 2, ey * 2, 300);
+    emit(s, 'fairingSep');
+  }
+
+  // 연료 부족 경고
+  if (ae) {
+    const idx = ae.stage - 1, tot = ae.stage === 1 ? s.st.fuel1 : s.st.fuel2, cur = ae.stage === 1 ? s.fuel1 : s.fuel2;
+    if (tot > 0 && cur / tot < 0.1 && cur > 0 && !s.lowFuelWarned[idx]) { s.lowFuelWarned[idx] = true; emit(s, 'fuelLow', ae.stage); }
+  }
+
+  // 궤도·미션 판정
+  if (s.phase === 'flight' || s.phase === 'won') {
+    const o = orbitElements(s.x, s.y, s.vx, s.vy);
+    s.orbit = o;
+    if (!s.missions[0] && s.maxAlt >= 10000) { s.missions[0] = true; emit(s, 'mission', 0); }
+    if (!s.missions[1] && s.maxAlt >= KARMAN) { s.missions[1] = true; emit(s, 'mission', 1); }
+    if (!s.missions[2] && (s.maxAlt >= TARGET_ALT || (s.alt > KARMAN && o.apogeeAlt >= TARGET_ALT))) { s.missions[2] = true; emit(s, 'mission', 2); }
+    if (!s.missions[3]) {
+      if (o.bound && o.perigeeAlt >= MIN_PERIGEE) s.orbitHold += dt; else s.orbitHold = 0;
+      if (s.orbitHold >= 10) { s.missions[3] = true; s.stableOrbit = true; emit(s, 'mission', 3); }
+    } else {
+      s.stableOrbit = o.bound && o.perigeeAlt >= MIN_PERIGEE;
+    }
+    if (s.phase === 'flight' && s.satellite && !s.missions[4]) {
+      const so = orbitElements(s.satellite.x, s.satellite.y, s.satellite.vx, s.satellite.vy);
+      if (so.bound && so.perigeeAlt >= MIN_PERIGEE) { s.missions[4] = true; emit(s, 'mission', 4); s.phase = 'won'; s.status = '임무 성공'; emit(s, 'win'); }
+    }
+    // 연료 소진 + 지구와 만나는 궤도 → 실패
+    if (s.phase === 'flight' && s.stageFuelEmpty && !s.stage1 === false) { /* 1단 연료만 소진: 분리 대기 */ }
+    if (s.phase === 'flight' && s.hasLifted && (!s.stage1 || !s.hasStage2) && s.fuel2 <= 0 && (s.hasStage2 || s.fuel1 <= 0) && o.perigeeAlt < 0 && !s.missions[3]) {
+      if (!s.noFuelTimer) s.noFuelTimer = 0; s.noFuelTimer += dt;
+      if (s.noFuelTimer > 2) fail(s, 'nofuel', '연료가 모두 소진되었고, 현재 궤도는 지표면과 만납니다');
+    }
+  }
+
+  // 위성 / 파편 전파
+  if (s.satellite) propagateBody(s.satellite, dt, 60);
+  for (let i = s.debris.length - 1; i >= 0; i--) {
+    const d = s.debris[i]; d.life += dt;
+    propagateBody(d, dt, d.mass);
+    d.rot += d.rotv * dt;
+    if (Math.hypot(d.x, d.y) < RE - 50 || d.life > 600) s.debris.splice(i, 1);
+  }
+  updateStatus(s);
+}
+function propagateBody(b, dt, mass) {
+  const r = Math.hypot(b.x, b.y), h = r - RE, g = MU / (r * r);
+  let ax = -g * b.x / r, ay = -g * b.y / r;
+  const sp = Math.hypot(b.vx, b.vy), a = atmosphere(h);
+  if (sp > 1) { const dF = 0.5 * a.rho * sp * sp * 0.6 * 6 / mass; ax -= dF * b.vx / sp; ay -= dF * b.vy / sp; }
+  b.vx += ax * dt; b.vy += ay * dt; b.x += b.vx * dt; b.y += b.vy * dt;
+}
+function fail(s, code, reason) {
+  if (s.phase === 'ended') return;
+  s.phase = 'ended'; s.failReason = reason; s.status = '실패'; emit(s, 'fail', { code, reason });
+}
+function updateStatus(s) {
+  if (s.phase === 'ended') return;
+  if (s.phase === 'won') { s.status = '임무 성공'; return; }
+  if (s.phase === 'pad') { s.status = '발사 대기'; return; }
+  if (s.phase === 'countdown') { s.status = s.cd <= 3 ? '엔진 점화' : '카운트다운'; return; }
+  const o = s.orbit;
+  if (s.stableOrbit) s.status = s.sat ? '안정 궤도 · 위성 분리 가능' : '궤도 비행';
+  else if (s.stageFuelEmpty && s.stage1 && s.hasStage2) s.status = '1단 연료 소진 · 단 분리(X)';
+  else if (s.engineOn && s.ign > 0.5) s.status = s.alt < 1000 ? '상승 중' : (s.alt < KARMAN ? '대기권 비행' : '우주 비행 · 가속');
+  else if (s.alt > KARMAN) s.status = '무동력 비행';
+  else s.status = s.hasLifted ? '엔진 정지 · 관성 비행' : '이륙 대기';
+}
+
+/* 예상 궤적 (엔진 없이 중력만 적용 — 지도 표시용) */
+function predictTrajectory(x, y, vx, vy, maxSteps, dtStep) {
+  const pts = [];
+  let px = x, py = y, pvx = vx, pvy = vy, impact = false;
+  for (let i = 0; i < maxSteps; i++) {
+    // RK2(중점법)
+    let r = Math.hypot(px, py), g = MU / (r * r);
+    const ax1 = -g * px / r, ay1 = -g * py / r;
+    const mx = px + pvx * dtStep / 2, my = py + pvy * dtStep / 2;
+    const mvx = pvx + ax1 * dtStep / 2, mvy = pvy + ay1 * dtStep / 2;
+    r = Math.hypot(mx, my); g = MU / (r * r);
+    const ax2 = -g * mx / r, ay2 = -g * my / r;
+    px += mvx * dtStep; py += mvy * dtStep; pvx += ax2 * dtStep; pvy += ay2 * dtStep;
+    pts.push([px, py]);
+    if (Math.hypot(px, py) < RE) { impact = true; break; }
+  }
+  return { pts, impact };
+}
+/*==PHYSICS-END==*/
+
+/*==GAME-RENDER==*/
+const $ = id => document.getElementById(id);
+const cv = $('scene'), ctx = cv.getContext('2d');
+let W = 800, H = 600, DPR = 1;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+function hex2rgb(h) { h = h.replace('#', ''); return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]; }
+function mix(a, b, t) { const A = hex2rgb(a), B = hex2rgb(b); return 'rgb(' + Math.round(lerp(A[0], B[0], t)) + ',' + Math.round(lerp(A[1], B[1], t)) + ',' + Math.round(lerp(A[2], B[2], t)) + ')'; }
+function shade(h, amt) { const A = hex2rgb(h); return 'rgb(' + clamp(A[0] + amt, 0, 255) + ',' + clamp(A[1] + amt, 0, 255) + ',' + clamp(A[2] + amt, 0, 255) + ')'; }
+const hash = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+
+function resize() {
+  const app = $('app');
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = app.clientWidth || innerWidth; H = app.clientHeight || innerHeight;
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+
+/* ---------- 별 · 구름 ---------- */
+const STARS = [];
+for (let i = 0; i < 340; i++) STARS.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.4 + 0.3, p: Math.random() * 6.28,
+  c: Math.random() < 0.2 ? '#b8d4ff' : (Math.random() < 0.2 ? '#ffe8c0' : '#ffffff') });
+const CLOUDS = [];
+for (let i = 0; i < 70; i++) CLOUDS.push({ s: (hash(i * 3.1) - 0.5) * 400000, a: 700 + hash(i * 7.7) * 11000, w: 110 + hash(i * 5.3) * 260 });
+function drawStars(alpha, t, offX) {
+  if (alpha <= 0.01) return;
+  for (const s of STARS) {
+    const tw = 0.65 + 0.35 * Math.sin(t * 1.5 + s.p);
+    ctx.globalAlpha = alpha * tw; ctx.fillStyle = s.c;
+    let x = ((s.x * W + offX) % W + W) % W;
+    ctx.fillRect(x, s.y * H, s.r, s.r);
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ---------- 로켓 도형 (설계에 따라 외형이 달라짐) ---------- */
+function geom(d) {
+  return { W1: 46, W2: 38, bell1: [30, 26, 22][d.e1], bw1: [20, 28, 42][d.e1], H1: [110, 150, 200][d.t1],
+    H2: d.two ? [46, 62, 82][d.t2] : 0, bell2: d.two ? [10, 12, 14][d.e2] : 0, bw2: [12, 16, 22][d.e2], fair: 56, satH: 26, inter: 8 };
+}
+function stackSections(d, o) {
+  const g = geom(d), L = [];
+  if (o.s1) { L.push({ k: 'bell1', h: g.bell1 }); L.push({ k: 't1', h: g.H1 }); if (d.two) L.push({ k: 'inter', h: g.inter + g.bell2 }); }
+  else if (d.two) L.push({ k: 'bell2', h: g.bell2 });
+  if (d.two) L.push({ k: 't2', h: g.H2 });
+  if (o.fair) L.push({ k: 'fair', h: g.fair }); else if (o.sat) L.push({ k: 'sat', h: g.satH });
+  return { g, L, h: L.reduce((a, b) => a + b.h, 0) };
+}
+function metal(c, x0, x1, base, hi) {
+  const gr = c.createLinearGradient(x0, 0, x1, 0);
+  gr.addColorStop(0, shade(base, -45)); gr.addColorStop(0.3, hi); gr.addColorStop(0.62, base); gr.addColorStop(1, shade(base, -70));
+  return gr;
+}
+function drawBell(c, E, n, bw, y0, y1) {
+  const wTop = bw * 0.5;
+  for (let i = 0; i < n; i++) {
+    const cxx = n === 1 ? 0 : (i - 1) * bw * 0.36, w = n === 1 ? bw : bw * 0.42;
+    c.beginPath(); c.moveTo(cxx - w * 0.28, y1); c.lineTo(cxx + w * 0.28, y1); c.lineTo(cxx + w / 2, y0); c.lineTo(cxx - w / 2, y0); c.closePath();
+    const gr = c.createLinearGradient(cxx - w / 2, 0, cxx + w / 2, 0); gr.addColorStop(0, '#1a2236'); gr.addColorStop(0.4, '#5b6a8c'); gr.addColorStop(1, '#141b2c');
+    c.fillStyle = gr; c.fill();
+    c.fillStyle = E.color; c.fillRect(cxx - w / 2, y0 - 2.5, w, 2.5);
+  }
+}
+function drawRocket(c, d, o) {
+  const S = stackSections(d, o), g = S.g, E1 = ENGINES[d.e1], E2 = ENGINES[d.e2];
+  let y = S.h / 2; const info = { h: S.h, secs: {}, bw: o.s1 ? g.bw1 : g.bw2 };
+  for (const sec of S.L) {
+    const y0 = y, y1 = y - sec.h; info.secs[sec.k] = { y0, y1, mid: (y0 + y1) / 2 };
+    if (sec.k === 'bell1') drawBell(c, E1, d.e1 === 2 ? 3 : 1, g.bw1, y0, y1);
+    else if (sec.k === 'bell2') drawBell(c, E2, 1, g.bw2, y0, y1);
+    else if (sec.k === 't1') {
+      const w = g.W1;
+      // 꼬리날개
+      c.fillStyle = shade(E1.color, -90);
+      for (const sg of [-1, 1]) { c.beginPath(); c.moveTo(sg * w / 2, y0 - 44); c.lineTo(sg * (w / 2 + 17), y0 + 8); c.lineTo(sg * w / 2, y0 - 4); c.closePath(); c.fill(); }
+      c.fillStyle = metal(c, -w / 2, w / 2, '#d7dfee', '#ffffff'); c.fillRect(-w / 2, y1, w, sec.h);
+      c.fillStyle = '#10182c'; c.fillRect(-w / 2, y0 - 9, w, 9);
+      c.fillStyle = E1.color; c.fillRect(-w / 2, y1 + 12, w, 7); c.fillRect(-w / 2, y0 - 16, w, 3);
+      c.strokeStyle = 'rgba(40,60,100,.28)'; c.lineWidth = 1;
+      for (let yy = y1 + 36; yy < y0 - 20; yy += 26) { c.beginPath(); c.moveTo(-w / 2, yy); c.lineTo(w / 2, yy); c.stroke(); }
+      c.save(); c.translate(0, sec.h > 120 ? (y1 + y0) / 2 : (y1 + y0) / 2); c.rotate(-Math.PI / 2); c.fillStyle = '#51648c'; c.font = '700 9px sans-serif'; c.textAlign = 'center'; c.fillText('ROCKET  LAB', 0, 3); c.restore();
+    } else if (sec.k === 'inter') {
+      const w = g.W2 - 2;
+      c.strokeStyle = '#6a7898'; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(-w / 2 + 3, y0); c.lineTo(-w / 2 + 3, y1); c.moveTo(w / 2 - 3, y0); c.lineTo(w / 2 - 3, y1);
+      c.moveTo(-w / 2 + 3, y0); c.lineTo(w / 2 - 3, y1); c.moveTo(w / 2 - 3, y0); c.lineTo(-w / 2 + 3, y1); c.stroke();
+      drawBell(c, E2, 1, g.bw2, y1 + g.bell2, y1);
+    } else if (sec.k === 't2') {
+      const w = g.W2;
+      c.fillStyle = metal(c, -w / 2, w / 2, '#cdd6e8', '#ffffff'); c.fillRect(-w / 2, y1, w, sec.h);
+      c.fillStyle = '#10182c'; c.fillRect(-w / 2, y0 - 5, w, 5);
+      c.fillStyle = E2.color; c.fillRect(-w / 2, y1 + 8, w, 6);
+    } else if (sec.k === 'fair') {
+      const w = g.W2;
+      c.beginPath(); c.moveTo(-w / 2, y0); c.quadraticCurveTo(-w / 2, y1 + sec.h * 0.32, 0, y1); c.quadraticCurveTo(w / 2, y1 + sec.h * 0.32, w / 2, y0); c.closePath();
+      c.fillStyle = metal(c, -w / 2, w / 2, '#e4eaf6', '#ffffff'); c.fill();
+      c.fillStyle = '#41e0c9'; c.fillRect(-w / 2, y0 - 6, w, 3);
+      c.strokeStyle = 'rgba(40,60,100,.25)'; c.beginPath(); c.moveTo(0, y1 + 4); c.lineTo(0, y0); c.stroke();
+    } else if (sec.k === 'sat') {
+      drawSatSprite(c, 0, (y0 + y1) / 2, 1);
+    }
+    y = y1;
+  }
+  return info;
+}
+function drawSatSprite(c, x, y, k) {
+  c.save(); c.translate(x, y); c.scale(k, k);
+  c.fillStyle = '#2d6fd8'; c.fillRect(-27, -4, 18, 8); c.fillRect(9, -4, 18, 8);
+  c.strokeStyle = '#9cc4ff'; c.lineWidth = 0.8; for (const sx of [-27, 9]) for (let i = 1; i < 3; i++) { c.beginPath(); c.moveTo(sx + i * 6, -4); c.lineTo(sx + i * 6, 4); c.stroke(); }
+  c.fillStyle = '#e9c35a'; c.fillRect(-7, -11, 14, 22);
+  c.fillStyle = '#7c5a10'; c.fillRect(-7, -3, 14, 2);
+  c.fillStyle = '#dfe6f2'; c.beginPath(); c.arc(0, -13, 4, Math.PI, 0); c.fill();
+  c.restore();
+}
+function drawFlame(c, y0, w, I, vac, t) {
+  if (I <= 0.02) return;
+  const flick = 0.86 + 0.28 * Math.random();
+  const len = (30 + 120 * I) * flick * (1 - 0.2 * vac), ww = w * (0.95 + 0.9 * vac) * (0.6 + 0.4 * I);
+  c.save(); c.globalCompositeOperation = 'lighter';
+  const gr = c.createRadialGradient(0, y0 + 4, 2, 0, y0 + 4, 70 + 120 * I); gr.addColorStop(0, 'rgba(255,190,90,' + (0.38 * I) + ')'); gr.addColorStop(1, 'rgba(255,120,30,0)');
+  c.fillStyle = gr; c.fillRect(-260, y0 - 200, 520, 520);
+  c.restore();
+  const layers = [[1, '#ff5a14', '#ffb43a', 0.9], [0.62, '#ffd36b', '#fff4c8', 0.95], [0.3, vac > 0.5 ? '#bfe4ff' : '#fff', '#ffffff', 1]];
+  for (const L of layers) {
+    const lw = ww * L[0], ll = len * (0.55 + 0.45 * L[0]);
+    const g2 = c.createLinearGradient(0, y0, 0, y0 + ll); g2.addColorStop(0, L[2]); g2.addColorStop(0.55, L[1]); g2.addColorStop(1, 'rgba(255,60,10,0)');
+    c.globalAlpha = L[3]; c.fillStyle = g2;
+    c.beginPath(); c.moveTo(-lw / 2, y0); c.bezierCurveTo(-lw * 0.6, y0 + ll * 0.35, -lw * 0.25, y0 + ll * 0.75, 0, y0 + ll);
+    c.bezierCurveTo(lw * 0.25, y0 + ll * 0.75, lw * 0.6, y0 + ll * 0.35, lw / 2, y0); c.closePath(); c.fill();
+  }
+  c.globalAlpha = 1;
+}
+
+/* ---------- 파티클 ---------- */
+const parts = [];
+function addPart(p) { if (parts.length < 900) parts.push(p); }
+function updateParts(dt) {
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i]; p.life += dt;
+    if (p.life >= p.max) { parts.splice(i, 1); continue; }
+    if (p.g) p.vy += p.g * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    if (p.drag) { const f = Math.exp(-p.drag * dt); p.vx *= f; p.vy *= f; }
+  }
+}
+function drawParts() {
+  for (const p of parts) {
+    const k = p.life / p.max;
+    if (p.type === 'smoke') {
+      const r = p.size * (1 + k * 2.6);
+      ctx.globalAlpha = (1 - k) * p.a; ctx.fillStyle = mix('#8a93a6', '#c9d0dc', k);
+      ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.283); ctx.fill();
+    } else if (p.type === 'fire') {
+      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (1 - k) * 0.9;
+      ctx.fillStyle = k < 0.35 ? '#ffe9a6' : (k < 0.7 ? '#ff9a2e' : '#ff4a1a');
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (1 - k * 0.5), 0, 6.283); ctx.fill(); ctx.globalCompositeOperation = 'source-over';
+    } else if (p.type === 'spark') {
+      ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 1 - k; ctx.fillStyle = p.col;
+      ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size); ctx.globalCompositeOperation = 'source-over';
+    } else if (p.type === 'conf') {
+      ctx.globalAlpha = 1 - k * k; ctx.fillStyle = p.col; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.life * 6 + p.size); ctx.fillRect(-p.size, -p.size / 2, p.size * 2, p.size); ctx.restore();
+    } else if (p.type === 'ring') {
+      ctx.globalAlpha = (1 - k) * 0.8; ctx.strokeStyle = '#ffd9a0'; ctx.lineWidth = 4 * (1 - k) + 1;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size * k * 7, 0, 6.283); ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+function explode(x, y, big) {
+  for (let i = 0; i < (big ? 150 : 80); i++) {
+    const a = Math.random() * 6.283, v = (30 + Math.random() * 360) * (big ? 1 : 0.7);
+    addPart({ type: 'fire', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: 0.5 + Math.random() * 1.1, size: 5 + Math.random() * 11, drag: 1.6 });
+  }
+  for (let i = 0; i < 60; i++) {
+    const a = Math.random() * 6.283, v = 50 + Math.random() * 300;
+    addPart({ type: 'smoke', x, y, vx: Math.cos(a) * v * 0.4, vy: Math.sin(a) * v * 0.4 - 20, life: 0, max: 1.8 + Math.random() * 2, size: 10 + Math.random() * 14, a: 0.7, drag: 1.2 });
+  }
+  for (let i = 0; i < 50; i++) {
+    const a = Math.random() * 6.283, v = 100 + Math.random() * 500;
+    addPart({ type: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: 0.6 + Math.random() * 0.8, size: 3, col: '#ffd27a', g: 300, drag: 0.8 });
+  }
+  addPart({ type: 'ring', x, y, vx: 0, vy: 0, life: 0, max: 0.8, size: 50 });
+}
+function firework(x, y) {
+  const cols = ['#41e0c9', '#ffd36b', '#ff7aa8', '#8ab4ff', '#ffffff', '#5dffa0'], col = cols[(Math.random() * cols.length) | 0];
+  for (let i = 0; i < 46; i++) {
+    const a = i / 46 * 6.283, v = 90 + Math.random() * 140;
+    addPart({ type: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: 1.3 + Math.random() * 0.6, size: 3.5, col, g: 90, drag: 1.4 });
+  }
+}
+
+/* ---------- 공통 배경 (우주 + 지구 가장자리) ---------- */
+function drawEarthLimb(cxE, cyE, R, t, glow) {
+  const gr = ctx.createRadialGradient(cxE, cyE - R * 0.35, R * 0.2, cxE, cyE, R);
+  gr.addColorStop(0, '#2a78d0'); gr.addColorStop(0.7, '#164b94'); gr.addColorStop(1, '#0a2a5e');
+  ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(cxE, cyE, R, 0, 6.283); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(cxE, cyE, R, 0, 6.283); ctx.clip();
+  for (let i = 0; i < 46; i++) {
+    const a = -Math.PI / 2 + (hash(i * 2.3) - 0.5) * 1.1 + t * 0.004, rr = R * (0.75 + hash(i * 5.1) * 0.24);
+    ctx.fillStyle = hash(i * 9.9) > 0.35 ? 'rgba(70,150,90,.55)' : 'rgba(225,235,250,.5)';
+    ctx.beginPath(); ctx.ellipse(cxE + Math.cos(a) * rr, cyE + Math.sin(a) * rr, 30 + hash(i * 3.3) * 110, 8 + hash(i * 6.1) * 30, a + 1.57, 0, 6.283); ctx.fill();
+  }
+  const sh = ctx.createLinearGradient(cxE - R, 0, cxE + R, 0); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,10,.55)');
+  ctx.fillStyle = sh; ctx.fillRect(cxE - R, cyE - R, R * 2, R * 2);
+  ctx.restore();
+  for (const [w, a] of [[26, 0.08], [14, 0.14], [6, 0.3], [2.2, 0.9]]) {
+    ctx.strokeStyle = 'rgba(110,200,255,' + (a * glow) + ')'; ctx.lineWidth = w; ctx.beginPath(); ctx.arc(cxE, cyE, R + w / 2 - 1, 0, 6.283); ctx.stroke();
+  }
+}
+function spaceBg(t, top, bot) {
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, top || '#000208'); g.addColorStop(1, bot || '#061436');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  drawStars(1, t, t * 3);
+}
+
+/* ---------- 시작 화면 ---------- */
+function renderMenu(t) {
+  spaceBg(t, '#000208', '#04102c');
+  const R = Math.max(W, H) * 1.6, cxE = W * 0.5, cyE = H * 0.8 + R;
+  const sun = ctx.createRadialGradient(W * 0.2, H * 0.86, 0, W * 0.2, H * 0.86, W * 0.5); sun.addColorStop(0, 'rgba(255,170,90,.35)'); sun.addColorStop(1, 'rgba(255,170,90,0)');
+  drawEarthLimb(cxE, cyE, R, t, 1);
+  ctx.fillStyle = sun; ctx.fillRect(0, 0, W, H);
+  // 궤도 위성
+  ctx.strokeStyle = 'rgba(65,224,201,.22)'; ctx.setLineDash([6, 8]); ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.ellipse(W * 0.5, H * 0.82, W * 0.62, H * 0.5, -0.15, Math.PI * 1.02, Math.PI * 1.98); ctx.stroke(); ctx.setLineDash([]);
+  const sa = Math.PI * 1.02 + ((t * 0.05) % 1) * (Math.PI * 0.96);
+  const sx = W * 0.5 + Math.cos(sa) * W * 0.62 * Math.cos(-0.15) - Math.sin(sa) * H * 0.5 * Math.sin(-0.15), sy = H * 0.82 + Math.cos(sa) * W * 0.62 * Math.sin(-0.15) + Math.sin(sa) * H * 0.5 * Math.cos(-0.15);
+  drawSatSprite(ctx, sx, sy, 0.8);
+  // 큰 로켓
+  const d = design || defaultDesign(), o = { s1: true, fair: true, sat: true };
+  const hU = stackSections(d, o).h, rs = Math.min(H * 0.46 / hU, 2.2);
+  ctx.save(); ctx.translate(W * 0.5, H * 0.5 + Math.sin(t * 1.1) * 5); ctx.rotate(Math.sin(t * 0.6) * 0.025); ctx.scale(rs, rs);
+  const info = drawRocket(ctx, d, o); drawFlame(ctx, info.h / 2, info.bw, 0.35 + 0.1 * Math.sin(t * 9), 0.6, t); ctx.restore();
+}
+
+/* ---------- 연구소 (조립동) ---------- */
+let labRect = { x: 0, y: 0, w: 300, h: 400 }, labPop = 0;
+function updateLabRect() { const r = $('labPreview').getBoundingClientRect(), a = $('app').getBoundingClientRect(); labRect = { x: r.left - a.left, y: r.top - a.top, w: r.width, h: r.height }; }
+function renderLab(t, dt) {
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#030816'); g.addColorStop(1, '#0a1a3e'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  drawStars(0.35, t, 0);
+  ctx.strokeStyle = 'rgba(40,90,170,.2)'; ctx.lineWidth = 1;
+  for (let x = (t * 6) % 40; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  const r = labRect, mx = r.x + r.w / 2, my = r.y + r.h / 2;
+  const sp = ctx.createRadialGradient(mx, my, 10, mx, my, Math.max(r.w, r.h) * 0.75); sp.addColorStop(0, 'rgba(65,224,201,.22)'); sp.addColorStop(1, 'rgba(65,224,201,0)');
+  ctx.fillStyle = sp; ctx.fillRect(r.x - 60, r.y - 60, r.w + 120, r.h + 120);
+  const d = design, o = { s1: true, fair: true, sat: true }, hU = stackSections(d, o).h;
+  const fullH = stackSections({ ...d, t1: 2, t2: 2, two: true }, o).h;   // 가장 큰 구성 기준으로 크기를 고정 (선택해도 화면이 출렁이지 않게)
+  const rs = Math.min((r.h - 36) / fullH, r.w / 130, 2.2);
+  labPop = Math.max(0, labPop - dt * 3);
+  const pop = 1 + labPop * 0.05;
+  const baseY = r.y + r.h - 8;                       // 발판 위에서 시작
+  const cy = baseY - 18 - (hU * rs) / 2;
+  ctx.fillStyle = '#16264d'; ctx.fillRect(mx - 100 * rs - 20, baseY - 14, 200 * rs + 40, 14);
+  ctx.fillStyle = '#41e0c9'; ctx.fillRect(mx - 100 * rs - 20, baseY - 14, 200 * rs + 40, 2);
+  ctx.save(); ctx.translate(mx, cy); ctx.scale(rs * pop, rs * pop);
+  const info = drawRocket(ctx, d, o); ctx.restore();
+  // 부품 라벨
+  const labs = [['fair', '위성 + 페어링'], ['t2', d.two ? '2단 탱크 ' + TANKS2[d.t2].name : null], ['inter', d.two ? '2단 엔진 ' + ENGINES[d.e2].name : null],
+    ['t1', '1단 탱크 ' + TANKS1[d.t1].name], ['bell1', '1단 엔진 ' + ENGINES[d.e1].name]];
+  ctx.font = '600 12.5px sans-serif'; ctx.textAlign = 'left';
+  for (const [k, txt] of labs) {
+    const s = info.secs[k]; if (!s || !txt) continue;
+    const yy = cy + s.mid * rs * pop, xs = mx + 30 * rs * pop, xe = mx + 52 * rs * pop + 28;
+    ctx.strokeStyle = 'rgba(65,224,201,.7)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(xs, yy); ctx.lineTo(xe, yy); ctx.stroke();
+    ctx.fillStyle = '#41e0c9'; ctx.beginPath(); ctx.arc(xs, yy, 2.5, 0, 6.283); ctx.fill();
+    if (xe + 150 < r.x + r.w + 30) { ctx.fillStyle = '#cfe8ff'; ctx.fillText(txt, xe + 5, yy + 4); }
+  }
+  // 길이 치수선
+  const topY = cy - (hU * rs * pop) / 2, botY = cy + (hU * rs * pop) / 2, dxl = mx - 56 * rs * pop - 12;
+  ctx.strokeStyle = 'rgba(125,147,189,.8)'; ctx.beginPath(); ctx.moveTo(dxl, topY); ctx.lineTo(dxl, botY); ctx.moveTo(dxl - 5, topY); ctx.lineTo(dxl + 5, topY); ctx.moveTo(dxl - 5, botY); ctx.lineTo(dxl + 5, botY); ctx.stroke();
+  ctx.save(); ctx.translate(dxl - 7, cy); ctx.rotate(-Math.PI / 2); ctx.fillStyle = '#9db4dc'; ctx.textAlign = 'center'; ctx.font = '12px sans-serif'; ctx.fillText('전체 길이 약 ' + (hU * 0.19).toFixed(0) + ' m', 0, 0); ctx.restore();
+}
+
+/* ---------- 비행 장면 ---------- */
+const view = { rs: 0.5, hFull: 300, shift: 0, shk: 0, prevGround: null, celeb: 0, exploded: false, explT: 0, simT: 0 };
+function skyColors(alt) {
+  const S = [[0, '#3b86e0', '#bfe2ff'], [8e3, '#2a69c0', '#9fd0f5'], [25e3, '#14407f', '#5f9bd6'], [50e3, '#081d46', '#1c4f8f'], [85e3, '#02071a', '#0a2a5a'], [130e3, '#000208', '#031433'], [1e9, '#000106', '#020c22']];
+  let i = 0; while (i < S.length - 2 && alt > S[i + 1][0]) i++;
+  const t = clamp((alt - S[i][0]) / (S[i + 1][0] - S[i][0]), 0, 1);
+  return { top: mix(S[i][1], S[i + 1][1], t), bot: mix(S[i][2], S[i + 1][2], t) };
+}
+function kzoom(alt) { return 3 * Math.pow(60 / (alt + 60), 1.236); }
+function groundOff(alt) {
+  const lim = H * 1.25, a = 3 * alt;
+  if (a < lim) return a;
+  const A1 = lim / 3, hf = H * 0.36;
+  return hf + (lim - hf) * Math.exp(-(alt - A1) / 18000);
+}
+function dropAt(u, Rk) { if (Math.abs(u) >= Rk * 0.999) return Rk; return u * u / (Rk + Math.sqrt(Rk * Rk - u * u)); }
+
+function renderFlight(s, t, dt) {
+  const alt = Math.max(0, s.alt), cx = W / 2, cy = H * 0.42, rs = view.rs;
+  const sR = Math.atan2(s.x, s.y) * RE, thR = Math.atan2(s.x, s.y);
+  view.shift *= Math.exp(-dt * 1.4);
+  // 화면 흔들림
+  let shk = view.shk; view.shk = Math.max(0, view.shk - dt * 14);
+  const eng = s.ign * s.throttle;
+  if (s.phase === 'flight' || s.phase === 'countdown') {
+    const air = Math.max(0, 1 - alt / 40000);
+    shk += eng * air * (s.clamp ? 1.2 : 2.6) * (s.phase === 'countdown' && s.cd > 3 ? 0 : 1);
+  }
+  ctx.save();
+  if (shk > 0.05) ctx.translate((Math.random() - 0.5) * shk * 2, (Math.random() - 0.5) * shk * 2);
+  // 하늘
+  const sk = skyColors(alt), gOff = groundOff(alt), gY = cy + view.hFull * rs / 2 + gOff;
+  const sg = ctx.createLinearGradient(0, 0, 0, clamp(gY, H * 0.35, H * 1.1)); sg.addColorStop(0, sk.top); sg.addColorStop(1, sk.bot);
+  ctx.fillStyle = sg; ctx.fillRect(-20, -20, W + 40, H + 40);
+  drawStars(clamp((alt - 22000) / 65000, 0, 1), t, -thR * 900);
+  // 구름
+  if (alt < 17000) {
+    const ca = clamp(1 - alt / 17000, 0, 1) * 0.9;
+    for (const c of CLOUDS) {
+      let ds = ((c.s - sR + 200000) % 400000 + 400000) % 400000 - 200000;
+      const px = cx + ds * 0.3, py = cy + (alt - c.a) * 0.5;
+      if (px < -300 || px > W + 300 || py < -80 || py > H + 80) continue;
+      ctx.globalAlpha = ca * 0.85; ctx.fillStyle = '#fff';
+      const w = c.w;
+      ctx.beginPath(); ctx.ellipse(px, py, w, w * 0.2, 0, 0, 6.283); ctx.ellipse(px - w * 0.4, py + w * 0.04, w * 0.55, w * 0.16, 0, 0, 6.283); ctx.ellipse(px + w * 0.45, py + w * 0.05, w * 0.6, w * 0.15, 0, 0, 6.283); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+  // 지구 (곡률은 고도가 높아질수록 뚜렷해짐)
+  const Rk = RE * kzoom(alt);
+  if (gY < H + 60) {
+    if (alt < 9000) {   // 먼 산
+      for (const [j, col] of [[0.5, '#3d6b7a'], [1, '#2f5a3c']]) {
+        ctx.globalAlpha = clamp(1 - alt / 9000, 0, 1) * (j < 1 ? 0.65 : 1); ctx.fillStyle = j < 1 ? mix(sk.bot, '#4b7a94', 0.6) : col;
+        ctx.beginPath(); ctx.moveTo(0, gY + 2);
+        for (let x = 0; x <= W; x += 20) { const q = x + sR * 0.12 * j; const h = (Math.sin(q * 0.004) + Math.sin(q * 0.011 + 1.3) * 0.6 + Math.sin(q * 0.027) * 0.3) * 16 * j + 36 * j; ctx.lineTo(x, gY - Math.max(2, h)); }
+        ctx.lineTo(W, gY + 2); ctx.closePath(); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+    const col = mix('#2f5f3a', '#1f5cae', clamp((alt - 12000) / 70000, 0, 1));
+    const pts = []; for (let x = -30; x <= W + 30; x += 24) pts.push([x, gY + dropAt(x - cx, Rk)]);
+    const path = () => { ctx.beginPath(); ctx.moveTo(pts[0][0], H + 40); for (const p of pts) ctx.lineTo(p[0], p[1]); ctx.lineTo(pts[pts.length - 1][0], H + 40); ctx.closePath(); };
+    path(); ctx.fillStyle = col; ctx.fill();
+    if (alt > 12000) {   // 대륙 · 구름 띠
+      ctx.save(); path(); ctx.clip();
+      const cyE = gY + Rk, step = 0.012 / Math.max(0.2, Math.min(1, 3000 / Rk * 3));
+      const i0 = Math.floor((thR - 0.6 * W / Rk - 0.05) / 0.012), i1 = Math.ceil((thR + 0.6 * W / Rk + 0.05) / 0.012);
+      for (let i = i0; i <= i1; i++) {
+        const hv = hash(i * 1.37), th = i * 0.012, dth = th - thR;
+        if (Math.abs(dth) * Rk > W * 0.8 + 200) continue;
+        const px = cx + Rk * Math.sin(dth), py = cyE - Rk * Math.cos(dth);
+        const size = Math.min(260, Rk * 0.012 * (1.5 + hash(i * 2.9) * 2.5));
+        ctx.save(); ctx.translate(px, py); ctx.rotate(dth);
+        if (hv > 0.5) { ctx.fillStyle = hash(i * 8.1) > 0.4 ? 'rgba(66,140,82,.75)' : 'rgba(190,170,110,.7)'; ctx.beginPath(); ctx.ellipse(0, size * 0.22, size, size * 0.3, 0, 0, 6.283); ctx.fill(); }
+        else if (hv < 0.28) { ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.beginPath(); ctx.ellipse(0, size * 0.1, size * 0.9, size * 0.16, 0, 0, 6.283); ctx.fill(); }
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+    // 대기권 빛번짐
+    const gl = clamp((alt - 18000) / 90000, 0, 1) * (alt > 600000 ? 0 : 1);
+    if (gl > 0) for (const [w, a] of [[26, 0.1], [12, 0.18], [5, 0.38], [2, 0.9]]) {
+      ctx.strokeStyle = 'rgba(120,205,255,' + a * gl + ')'; ctx.lineWidth = w; ctx.beginPath();
+      pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1] - w / 2 + 1) : ctx.moveTo(p[0], p[1] - w / 2 + 1)); ctx.stroke();
+    }
+    // 지평선 눈금 (속도감)
+    if (alt < 9000 && alt > 5) {
+      ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1;
+      for (let i = 0; i < 12; i++) { const yy = gY + 14 + i * i * 6; if (yy > H) break; ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(W, yy); ctx.stroke(); }
+    }
+  }
+  // 발사대 (지상에 고정)
+  if (gY < H + 400 && alt < 3000) {
+    const base = gY, pw = 150 * rs, tx = cx - 62 * rs - 30;
+    ctx.fillStyle = '#5c6679'; ctx.fillRect(cx - pw - 40, base - 2, pw * 2 + 80, 16);
+    ctx.fillStyle = '#39425a'; ctx.fillRect(cx - pw - 40, base - 2, pw * 2 + 80, 4);
+    ctx.fillStyle = '#242c40'; ctx.fillRect(cx - 40 * rs, base - 12 * rs, 80 * rs, 12 * rs);
+    const th = view.hFull * rs * 0.8, tw = 30 * rs;
+    ctx.strokeStyle = '#7a88a6'; ctx.lineWidth = Math.max(1.2, 2 * rs);
+    ctx.strokeRect(tx - tw / 2, base - th, tw, th);
+    ctx.beginPath(); for (let y = 0; y < th; y += 26 * rs) { ctx.moveTo(tx - tw / 2, base - y); ctx.lineTo(tx + tw / 2, base - y - 26 * rs); ctx.moveTo(tx + tw / 2, base - y); ctx.lineTo(tx - tw / 2, base - y - 26 * rs); } ctx.stroke();
+    if (!s.hasLifted || alt < 40) { ctx.lineWidth = Math.max(1.5, 3 * rs); ctx.beginPath(); for (const f of [0.35, 0.6, 0.82]) { ctx.moveTo(tx + tw / 2, base - th * f); ctx.lineTo(cx - 25 * rs, base - th * f); } ctx.stroke(); }
+    ctx.fillStyle = '#ff5470'; ctx.beginPath(); ctx.arc(tx, base - th - 5, 3.5, 0, 6.283); ctx.fill();
+    if ((t * 2 | 0) % 2) { ctx.fillStyle = 'rgba(255,84,112,.3)'; ctx.beginPath(); ctx.arc(tx, base - th - 5, 9, 0, 6.283); ctx.fill(); }
+  }
+  // 파편 · 위성
+  const fl = localFrame(s.x, s.y);
+  const toScr = (o2, kd) => { const rx = o2.x - s.x, ry = o2.y - s.y; return [cx + (o2.ox || 0) + (rx * fl.ex + ry * fl.ey) * kd, cy + (o2.oy || 0) - (rx * fl.ux + ry * fl.uy) * kd]; };
+  for (const d of s.debris) {
+    const kd = d.type === 's1' ? 1.5 : 12, p = toScr(d, kd);
+    if (p[0] < -200 || p[0] > W + 200 || p[1] < -300 || p[1] > H + 300) continue;
+    ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate((d.rot || 0) * Math.PI / 180 + (d.ang0 || 0)); ctx.scale(rs, rs);
+    if (d.type === 's1') {
+      const g = geom(s.design), hh = g.bell1 + g.H1;
+      // 1단만 그리기
+      const yb = hh / 2; drawBell(ctx, ENGINES[s.design.e1], s.design.e1 === 2 ? 3 : 1, g.bw1, yb, yb - g.bell1);
+      const w = g.W1, yt = -hh / 2; ctx.fillStyle = metal(ctx, -w / 2, w / 2, '#cfd7e6', '#fff'); ctx.fillRect(-w / 2, yt, w, g.H1);
+      ctx.fillStyle = ENGINES[s.design.e1].color; ctx.fillRect(-w / 2, yt + 12, w, 7); ctx.fillStyle = '#10182c'; ctx.fillRect(-w / 2, yt, w, 4);
+    } else {
+      const w = 19; ctx.fillStyle = '#e4eaf6'; ctx.beginPath(); const sg = d.type === 'fairL' ? -1 : 1;
+      ctx.moveTo(0, 28); ctx.quadraticCurveTo(0, -10, sg * 0, -28); ctx.quadraticCurveTo(sg * w, -10, sg * w, 28); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+  if (s.satellite) { const p = toScr(s.satellite, 12); ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate((s.satellite.ang0 || 0)); drawSatSprite(ctx, 0, 0, Math.max(0.5, rs * 1.1)); ctx.restore(); }
+
+  // 로켓 본체
+  const o = { s1: s.stage1, fair: s.fairing, sat: s.sat };
+  const pr = s.pitch * Math.PI / 180;
+  const sec = stackSections(s.design, o);
+  const hL = sec.h * rs / 2;
+  const cyR = cy - view.shift;
+  if (!view.exploded) {
+    ctx.save(); ctx.translate(cx, cyR); ctx.rotate(pr); ctx.scale(rs, rs);
+    const info = drawRocket(ctx, s.design, o);
+    const vac = clamp((alt - 12000) / 60000, 0, 1);
+    if (s.ign > 0.02) drawFlame(ctx, info.h / 2, info.bw, s.ign * (0.25 + 0.75 * s.throttle), vac, t);
+    ctx.restore();
+  }
+  // 배기 파티클 (물리 시간 배속이 빠르면 줄임)
+  const nzx = cx - hL * Math.sin(pr), nzy = cyR + hL * Math.cos(pr), exx = -Math.sin(pr), exy = Math.cos(pr);
+  if (!view.exploded && eng > 0.03 && dt > 0 && warpNow() <= 2) {
+    const low = alt < 80 && !s.hasLifted ? 1 : 0, n = Math.round((alt < 30000 ? 7 : 2) * eng + Math.random());
+    for (let i = 0; i < n; i++) {
+      const sp = 140 + Math.random() * 160;
+      let vx = exx * sp + (Math.random() - 0.5) * 70, vy = exy * sp + (Math.random() - 0.5) * 30;
+      if (low) { vx = (Math.random() < 0.5 ? -1 : 1) * (90 + Math.random() * 200); vy = -Math.random() * 25; }
+      addPart({ type: 'fire', x: nzx + (Math.random() - 0.5) * 12 * rs, y: nzy + 4, vx, vy, life: 0, max: 0.25 + Math.random() * 0.35, size: (4 + Math.random() * 6) * Math.max(0.7, rs), drag: 1.2 });
+    }
+    if (alt < 28000) {
+      const sn = Math.round(3 * eng + Math.random() * 1.2);
+      for (let i = 0; i < sn; i++) {
+        let vx = exx * 70 + (Math.random() - 0.5) * 60, vy = exy * 70 + (Math.random() - 0.5) * 30;
+        if (low) { vx = (Math.random() < 0.5 ? -1 : 1) * (60 + Math.random() * 180); vy = -Math.random() * 12; }
+        addPart({ type: 'smoke', x: nzx + (Math.random() - 0.5) * 18, y: nzy + 10, vx, vy, life: 0, max: 2.4 + Math.random() * 2.6, size: (6 + Math.random() * 8) * Math.max(0.7, rs), a: 0.55 * clamp(1 - alt / 28000, 0.1, 1), drag: 0.9, ground: 1 });
+      }
+    }
+  }
+  // 연기는 지면에 붙어 있으므로 장면과 함께 이동
+  if (view.prevGround !== null) {
+    const dg = gY - view.prevGround, dxs = -s.vt * 0.3 * dt;
+    for (const p of parts) if (p.ground) { p.y += dg; p.x += dxs; }
+  }
+  view.prevGround = gY;
+  drawParts();
+
+  // 비행 가이드 링 (현재 기울기 · 추천 기울기 · 속도 방향)
+  if ((s.phase === 'flight' || s.phase === 'won') && !view.exploded) {
+    const R0 = Math.min(W, H) * 0.3;
+    ctx.save(); ctx.translate(cx, cyR);
+    ctx.strokeStyle = 'rgba(65,224,201,.16)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(0, 0, R0, 0, 6.283); ctx.stroke();
+    for (let a = 0; a < 360; a += 30) { const r = a * Math.PI / 180, l = a % 90 === 0 ? 9 : 5; ctx.beginPath(); ctx.moveTo(Math.sin(r) * R0, -Math.cos(r) * R0); ctx.lineTo(Math.sin(r) * (R0 - l), -Math.cos(r) * (R0 - l)); ctx.stroke(); }
+    const gp = guidePitch(s) * Math.PI / 180;
+    ctx.strokeStyle = '#5dffa0'; ctx.fillStyle = '#5dffa0'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(Math.sin(gp) * (R0 - 12), -Math.cos(gp) * (R0 - 12)); ctx.lineTo(Math.sin(gp) * (R0 + 10), -Math.cos(gp) * (R0 + 10)); ctx.stroke();
+    ctx.font = '700 11px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('추천', Math.sin(gp) * (R0 + 24), -Math.cos(gp) * (R0 + 24) + 4);
+    if (s.speed > 30) {
+      const psi = Math.atan2(s.vt, s.vr), px = Math.sin(psi) * R0 * 0.62, py = -Math.cos(psi) * R0 * 0.62;
+      ctx.strokeStyle = '#ffd36b'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px, py, 9, 0, 6.283); ctx.moveTo(px, py - 15); ctx.lineTo(px, py - 9); ctx.moveTo(px - 15, py); ctx.lineTo(px - 9, py); ctx.moveTo(px + 15, py); ctx.lineTo(px + 9, py); ctx.stroke();
+      ctx.fillStyle = '#ffd36b'; ctx.fillText('속도방향', px, py + 24);
+    }
+    ctx.restore();
+  }
+  ctx.restore();
+}
+function warpNow() { return typeof warp === 'number' ? warp : 1; }
+
+/* ---------- 궤도 지도 ---------- */
+const mapC = $('map'), mctx = mapC.getContext('2d');
+let mapCache = { t: 0, pts: null, impact: false, spts: null };
+function drawMap(s) {
+  const c = mctx, S = mapC.width, h2 = S / 2;
+  c.clearRect(0, 0, S, S);
+  const r = Math.hypot(s.x, s.y), o = s.orbit || orbitElements(s.x, s.y, s.vx, s.vy);
+  let rview = Math.max(r, TARGET_ALT + RE);
+  if (o.bound) rview = Math.max(rview, Math.min(o.ra, 3 * RE)); else rview = Math.max(rview, Math.min(r * 1.2, 3 * RE));
+  const rel = rview / RE;
+  const exag = clamp(0.6 / Math.max(0.02, rel - 1), 1, 12);
+  const relP = 1 + (rel - 1) * exag, ppr = (h2 * 0.9) / relP;   // 지구 반지름 1 = ppr 픽셀
+  const M = (px, py) => { const rr = Math.hypot(px, py) / RE, rp = 1 + (rr - 1) * exag, k = rp * ppr / Math.max(1e-9, rr); return [h2 + px / RE * k, h2 - py / RE * k]; };
+  // 지구
+  const eg = c.createRadialGradient(h2, h2 - ppr * 0.3, ppr * 0.2, h2, h2, ppr); eg.addColorStop(0, '#2f86d8'); eg.addColorStop(1, '#134a92');
+  c.fillStyle = eg; c.beginPath(); c.arc(h2, h2, ppr, 0, 6.283); c.fill();
+  c.fillStyle = 'rgba(70,150,90,.55)'; c.beginPath(); c.ellipse(h2 - ppr * 0.3, h2 + ppr * 0.2, ppr * 0.3, ppr * 0.16, 0.4, 0, 6.283); c.ellipse(h2 + ppr * 0.35, h2 - ppr * 0.25, ppr * 0.22, ppr * 0.12, -0.5, 0, 6.283); c.fill();
+  const ring = (alt, col, dash, lw) => { const rp = (1 + (alt / RE) * exag) * ppr; c.strokeStyle = col; c.lineWidth = lw; c.setLineDash(dash); c.beginPath(); c.arc(h2, h2, rp, 0, 6.283); c.stroke(); c.setLineDash([]); };
+  ring(KARMAN, 'rgba(120,200,255,.5)', [4, 6], 1.6);
+  ring(TARGET_ALT, 'rgba(255,211,107,.8)', [3, 5], 1.8);
+  c.font = '700 20px sans-serif'; c.fillStyle = '#ffd36b'; c.textAlign = 'left'; c.fillText('목표 200 km', 10, 24);
+  c.fillStyle = 'rgba(150,215,255,.85)'; c.fillText('카르만선 100 km', 10, 48);
+  if (exag > 1.3) { c.fillStyle = '#7d93bd'; c.font = '16px sans-serif'; c.fillText('※ 고도 ×' + exag.toFixed(0) + ' 확대 표시', 10, S - 12); }
+  // 발사장
+  const L = M(0, RE); c.fillStyle = '#ff5470'; c.beginPath(); c.moveTo(L[0], L[1] - 8); c.lineTo(L[0] - 6, L[1] + 3); c.lineTo(L[0] + 6, L[1] + 3); c.closePath(); c.fill();
+  // 예상 궤적
+  const now = performance.now();
+  if (now - mapCache.t > 90) {
+    mapCache.t = now;
+    const per = o.bound ? o.period : 0, dtS = o.bound ? clamp(per / 200, 4, 200) : 14, nst = o.bound ? 205 : 340;
+    const tr = predictTrajectory(s.x, s.y, s.vx, s.vy, nst, dtS); mapCache.pts = tr.pts; mapCache.impact = tr.impact;
+    if (s.satellite) { const so = orbitElements(s.satellite.x, s.satellite.y, s.satellite.vx, s.satellite.vy); mapCache.spts = predictTrajectory(s.satellite.x, s.satellite.y, s.satellite.vx, s.satellite.vy, 205, so.bound ? clamp(so.period / 200, 4, 200) : 14).pts; } else mapCache.spts = null;
+  }
+  const drawPath = (pts, col, w, dash, from) => {
+    if (!pts || !pts.length) return;
+    c.strokeStyle = col; c.lineWidth = w; c.setLineDash(dash || []); c.beginPath();
+    let p0 = M(from[0], from[1]); c.moveTo(p0[0], p0[1]); for (const p of pts) { const q = M(p[0], p[1]); c.lineTo(q[0], q[1]); } c.stroke(); c.setLineDash([]);
+  };
+  drawPath(mapCache.pts, mapCache.impact ? '#ff6b86' : '#41e0c9', 3, [8, 6], [s.x, s.y]);
+  if (mapCache.impact && mapCache.pts.length) { const q = M(...mapCache.pts[mapCache.pts.length - 1]); c.strokeStyle = '#ff6b86'; c.lineWidth = 3; c.beginPath(); c.moveTo(q[0] - 7, q[1] - 7); c.lineTo(q[0] + 7, q[1] + 7); c.moveTo(q[0] + 7, q[1] - 7); c.lineTo(q[0] - 7, q[1] + 7); c.stroke(); }
+  if (s.satellite && mapCache.spts) drawPath(mapCache.spts, 'rgba(233,195,90,.7)', 2, [3, 5], [s.satellite.x, s.satellite.y]);
+  // 로켓 · 위성
+  const P = M(s.x, s.y); c.fillStyle = '#fff'; c.beginPath(); c.arc(P[0], P[1], 6, 0, 6.283); c.fill(); c.strokeStyle = '#41e0c9'; c.lineWidth = 2; c.beginPath(); c.arc(P[0], P[1], 11, 0, 6.283); c.stroke();
+  if (s.satellite) { const Q = M(s.satellite.x, s.satellite.y); c.fillStyle = '#e9c35a'; c.fillRect(Q[0] - 5, Q[1] - 5, 10, 10); }
+  $('mapA').textContent = '근지점 ' + (isFinite(o.perigeeAlt) && o.perigeeAlt >= 0 ? fmtDist(o.perigeeAlt) : '–');
+  $('mapB').textContent = '원지점 ' + (o.bound && isFinite(o.apogeeAlt) && o.apogeeAlt > 0 ? fmtDist(o.apogeeAlt) : '–');
+}
+function fmtDist(m) { if (m < 0) return m > -1000 ? '0 m' : '지표 아래'; if (m < 1000) return Math.round(m) + ' m'; if (m < 100000) return (m / 1000).toFixed(1) + ' km'; return Math.round(m / 1000).toLocaleString('ko-KR') + ' km'; }
+function fmtSpd(v) { v = Math.abs(v) < 0.05 ? 0 : v; return Math.abs(v) < 1000 ? Math.round(v) + ' m/s' : (v / 1000).toFixed(2) + ' km/s'; }
+
+/*==GAME-UI==*/
+const LS = { design: 'rocketlab.v1.design', rec: 'rocketlab.v1.rec', auto: 'rocketlab.v1.auto', snd: 'rocketlab.v1.snd' };
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+function validDesign(d) {
+  return d && [d.e1, d.t1, d.e2, d.t2].every(v => Number.isInteger(v) && v >= 0 && v <= 2) && typeof d.two === 'boolean';
+}
+function loadSaved() { try { const d = JSON.parse(lsGet(LS.design)); return validDesign(d) ? d : null; } catch (e) { return null; } }
+let design = loadSaved() || defaultDesign();
+let screen = 'menu', sim = null, warp = 1, paused = false, helpOpen = false, accum = 0, resTimer = 0;
+let muted = lsGet(LS.snd) === '0';
+const keys = {}, hold = { l: 0, r: 0, u: 0, d: 0 };
+const HS = 1 / 60;
+const MISSION_TXT = ['고도 10 km 돌파', '카르만선 100 km 통과 (우주 도달)', '고도 200 km 도달 (예상 궤적 정점 포함)', '안정 궤도 진입 (근지점 150 km↑, 10초 유지)', '위성 분리 · 궤도 배치'];
+
+/* ---------- 사운드 (WebAudio, 외부 파일 없음) ---------- */
+let AC = null, rumbleG = null;
+function audio() {
+  if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+  if (AC && AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function beep(f, d, type, v) {
+  if (muted) return; const a = audio(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain(); o.type = type || 'sine'; o.frequency.value = f;
+  g.gain.setValueAtTime(0.0001, a.currentTime); g.gain.exponentialRampToValueAtTime(v || 0.15, a.currentTime + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + d);
+  o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + d + 0.05);
+}
+function startRumble() {
+  const a = audio(); if (!a || rumbleG) return;
+  const len = a.sampleRate * 2, buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
+  let b = 0; for (let i = 0; i < len; i++) { b = (b + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = b * 3.5; }
+  const src = a.createBufferSource(); src.buffer = buf; src.loop = true;
+  const lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 380;
+  rumbleG = a.createGain(); rumbleG.gain.value = 0; src.connect(lp); lp.connect(rumbleG); rumbleG.connect(a.destination); src.start();
+}
+function setRumble(v) { if (rumbleG && AC) rumbleG.gain.setTargetAtTime(muted ? 0 : v, AC.currentTime, 0.08); }
+const sfx = {
+  tick() { beep(880, 0.12, 'square', 0.07); }, go() { beep(1320, 0.5, 'square', 0.1); },
+  chime() { beep(660, 0.18, 'sine', 0.16); setTimeout(() => beep(990, 0.3, 'sine', 0.16), 130); },
+  win() { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, 0.4, 'triangle', 0.18), i * 150)); },
+  warn() { beep(300, 0.25, 'sawtooth', 0.09); }, sep() { beep(160, 0.2, 'square', 0.14); },
+  boom() { beep(70, 0.9, 'sawtooth', 0.25); beep(45, 1.2, 'square', 0.2); }
+};
+
+/* ---------- 화면 전환 ---------- */
+function showScreen(n) {
+  screen = n;
+  for (const id of ['menu', 'lab', 'flight']) $(id).classList.toggle('on', id === n);
+  $('fsBtn').style.display = n === 'menu' ? 'block' : 'none';
+  if (n === 'lab') { updateLab(); requestAnimationFrame(updateLabRect); updateLabRect(); }
+  if (n === 'menu') renderRec();
+  setRumble(0);
+}
+function renderRec() {
+  let r = null; try { r = JSON.parse(lsGet(LS.rec)); } catch (e) {}
+  $('mRec').textContent = r ? '🏆 최고 고도 ' + fmtDist(r.bestAlt || 0) + '  ·  임무 성공 ' + (r.wins || 0) + '회' + (r.bestTime ? '  ·  최단 성공 ' + fmtTime(r.bestTime) : '') : '아직 기록이 없어요. 첫 발사에 도전해 보세요!';
+}
+function fmtTime(t) { t = Math.max(0, Math.floor(t)); return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); }
+function saveRecord(s, win) {
+  let r = {}; try { r = JSON.parse(lsGet(LS.rec)) || {}; } catch (e) {}
+  r.bestAlt = Math.max(r.bestAlt || 0, s.maxAlt);
+  if (win) { r.wins = (r.wins || 0) + 1; r.bestTime = r.bestTime ? Math.min(r.bestTime, s.t) : s.t; }
+  lsSet(LS.rec, JSON.stringify(r));
+}
+
+/* ---------- 로켓 연구소 UI ---------- */
+function buildCards() {
+  const mk = (id, list, key, fn) => {
+    const box = $(id); box.innerHTML = '';
+    list.forEach((it, i) => {
+      const b = document.createElement('button'); b.className = 'card'; b.innerHTML = fn(it, i);
+      b.addEventListener('click', () => { design[key] = i; labPop = 1; beep(520 + i * 120, 0.08, 'triangle', 0.08); updateLab(); });
+      box.appendChild(b);
+    });
+  };
+  const eng = (E, up) => '<span class="dot" style="background:' + E.color + '"></span><b>' + E.name + '</b><small>' + E.tag + '</small><small>' +
+    (up ? '진공 추력 ' + Math.round(E.F * UPPER_THRUST / 1000) + ' kN' : '추력 ' + Math.round(E.F / 1000).toLocaleString('ko-KR') + ' kN') +
+    '</small><small>Isp ' + (up ? E.ispVac + ' s' : E.ispSL + '~' + E.ispVac + ' s') + '</small><small>질량 ' + ((up ? E.mass * UPPER_MASS : E.mass) / 1000).toFixed(1) + ' t</small>';
+  mk('cE1', ENGINES, 'e1', E => eng(E, false)); mk('cE2', ENGINES, 'e2', E => eng(E, true));
+  mk('cT1', TANKS1, 't1', T => '<b>' + T.name + '</b><small>연료 ' + (T.fuel / 1000) + ' t</small><small>구조 ' + (T.fuel * STRUCT_RATIO / 1000).toFixed(1) + ' t</small>');
+  mk('cT2', TANKS2, 't2', T => '<b>' + T.name + '</b><small>연료 ' + (T.fuel / 1000) + ' t</small><small>구조 ' + (T.fuel * STRUCT_RATIO / 1000).toFixed(1) + ' t</small>');
+}
+function updateLab() {
+  const sel = (id, v) => [...$(id).children].forEach((c, i) => c.classList.toggle('sel', i === v));
+  sel('cE1', design.e1); sel('cT1', design.t1); sel('cE2', design.e2); sel('cT2', design.t2);
+  $('twoOn').classList.toggle('on', design.two); $('twoOff').classList.toggle('on', !design.two);
+  $('stage2Opts').style.display = design.two ? '' : 'none';
+  const st = vehicleStats(design), E1 = ENGINES[design.e1];
+  $('sMass').textContent = (st.mTotal / 1000).toFixed(1) + ' t';
+  $('sFuel').textContent = (st.fuel1 / 1000).toFixed(0) + ' / ' + (st.fuel2 / 1000).toFixed(0) + ' t';
+  $('sThr').textContent = Math.round(st.thrustSL / 1000).toLocaleString('ko-KR') + ' kN';
+  $('sThrV').textContent = Math.round(st.thrustVac / 1000).toLocaleString('ko-KR') + ' kN';
+  const tw = $('sTwr'); tw.textContent = st.twr.toFixed(2); tw.className = 'mono ' + (st.twr < 1.05 ? 'bad' : st.twr < 1.2 ? 'mid' : 'good');
+  $('sBurn').textContent = Math.round(st.burn1) + ' s / ' + (design.two ? Math.round(st.burn2) + ' s' : '–');
+  const dv = st.dvTotal / 1000; $('sDv').textContent = dv.toFixed(2) + ' km/s'; $('sDv').className = 'mono ' + (dv < 9.4 ? 'bad' : dv < 9.9 ? 'mid' : 'good');
+  $('dvBar').style.width = Math.min(100, dv / 11.5 * 100) + '%';
+  let v, cls;
+  if (st.twr < 1.05) { cls = 'bad'; v = '⚠ 추력 대 중량비(TWR)가 1.05보다 작아서 로켓이 뜨지 못해요. 더 힘센 엔진을 쓰거나 탱크를 줄이세요.'; }
+  else if (!design.two) { cls = 'bad'; v = '⚠ 1단만으로는 궤도 속도(약 7.8 km/s)에 닿기 어려워요. 2단을 추가해 보세요. (Δv ' + dv.toFixed(1) + ' km/s)'; }
+  else if (dv < 9.4) { cls = 'bad'; v = '⚠ 연료가 부족해요 (Δv ' + dv.toFixed(1) + ' < 9.4 km/s). 탱크를 키우거나 효율 좋은 엔진을 골라보세요.'; }
+  else if (dv < 9.9) { cls = 'mid'; v = '△ 궤도에 갈 수는 있지만 여유가 적어요. 조종이 정확해야 합니다.'; }
+  else if (st.twr > 2.8) { cls = 'mid'; v = '△ 힘은 충분하지만 TWR이 너무 높아 대기 중 공기저항 손실이 커요. (TWR ' + st.twr.toFixed(1) + ')'; }
+  else { cls = 'good'; v = '✔ 충분한 Δv와 추력 — 궤도 진입 가능성이 높아요!'; }
+  const ve = $('verdict'); ve.className = cls; ve.textContent = v; ve.style.borderColor = cls === 'bad' ? 'var(--bad)' : cls === 'mid' ? 'var(--warn)' : 'var(--ok)';
+  $('goLaunch').disabled = st.twr < 1.05;
+}
+
+/* ---------- 발사 / 비행 시작 ---------- */
+function setViewScale() { view.hFull = stackSections(design, { s1: true, fair: true, sat: true }).h; view.rs = clamp(H * 0.5 / view.hFull, 0.34, 1.2); }
+function startFlight() {
+  clearTimeout(resTimer); $('res').classList.remove('on');
+  sim = createSim(design); sim.autopilot = lsGet(LS.auto) !== '0'; sim.throttle = 1;
+  warp = 1; paused = false; accum = 0; $('pauseV').style.display = 'none';
+  setViewScale(); view.shift = 0; view.exploded = false; view.prevGround = null; view.shk = 0; view.celeb = 0; parts.length = 0; mapCache.t = 0; mapCache.pts = null;
+  $('toasts').innerHTML = ''; $('warn').innerHTML = ''; warnKey = '';
+  buildMissions(); showScreen('flight'); updateHUD(sim, true);
+}
+function buildMissions() {
+  $('msList').innerHTML = MISSION_TXT.map((t, i) => '<div class="ms" id="ms' + i + '"><i>✓</i><span>' + (i + 1) + '. ' + t + '</span></div>').join('');
+}
+function doLaunch() {
+  if (!sim || sim.phase !== 'pad') return;
+  const st = vehicleStats(design);
+  if (st.twr < 1.05) { $('launchMsg').textContent = '추력이 너무 작아 이륙할 수 없어요. 연구소에서 설계를 바꿔주세요.'; sfx.warn(); return; }
+  audio(); startRumble(); startCountdown(sim); sfx.tick();
+}
+function toast(txt, cls) {
+  const box = $('toasts'); while (box.children.length >= 3) box.removeChild(box.firstChild);
+  const d = document.createElement('div'); d.className = 'toast ' + (cls || ''); d.textContent = txt; box.appendChild(d);
+  setTimeout(() => { if (d.parentNode) d.parentNode.removeChild(d); }, 3900);
+}
+
+/* ---------- 물리 이벤트 → 연출 ---------- */
+let lastTick = -1;
+function handleEvents(s) {
+  for (const ev of s.events) {
+    switch (ev.type) {
+      case 'ignite': toast('🔥 엔진 점화'); break;
+      case 'cutoff': toast('엔진 정지'); break;
+      case 'liftoff': toast('🚀 리프트오프!', 'big'); view.shk = 16; sfx.go(); warp = 1; break;
+      case 'stageSep': {
+        const dd = s.design, oOld = { s1: true, fair: s.fairing, sat: s.sat }, oNew = { s1: false, fair: s.fairing, sat: s.sat };
+        const hO = stackSections(dd, oOld).h, hN = stackSections(dd, oNew).h, rs = view.rs;
+        view.shift += (hO - hN) / 2 * rs;
+        const g = geom(dd), sec1 = g.bell1 + g.H1 + (dd.two ? g.inter : 0), off = (hO - sec1) / 2 * rs + 0, pr = s.pitch * Math.PI / 180;
+        const db = s.debris[s.debris.length - 1];
+        if (db) { db.ox = -Math.sin(pr) * off; db.oy = Math.cos(pr) * off; }
+        toast('⛓ 1단 분리 · 2단 점화 준비'); view.shk = 10; sfx.sep(); warp = 1; break;
+      }
+      case 'fairingSep': {
+        const dd = s.design, oOld = { s1: s.stage1, fair: true, sat: s.sat }, oNew = { s1: s.stage1, fair: false, sat: s.sat };
+        const hO = stackSections(dd, oOld).h, hN = stackSections(dd, oNew).h, rs = view.rs;
+        view.shift -= (hO - hN) / 2 * rs;
+        const pr = s.pitch * Math.PI / 180, off = -(hO / 2 - 20) * rs;
+        for (const d of s.debris.slice(-2)) { d.ox = -Math.sin(pr) * off; d.oy = Math.cos(pr) * off; d.ang0 = 0; }
+        toast('페어링 분리'); sfx.sep(); break;
+      }
+      case 'burnout': toast(ev.data === 1 ? '1단 연료 소진 — X 로 단 분리' : '2단 연료 소진', 'bad'); sfx.warn(); warp = 1; break;
+      case 'fuelLow': toast('⚠ 연료 부족 (10% 미만)', 'bad'); sfx.warn(); warp = 1; break;
+      case 'mission': {
+        const i = ev.data; sfx.chime(); toast('✔ 임무 ' + (i + 1) + ' 완료 — ' + MISSION_TXT[i].replace(/ \(.*\)/, ''), i === 3 ? 'big' : '');
+        if (i === 3) { for (let k = 0; k < 4; k++) setTimeout(() => firework(W * (0.25 + Math.random() * 0.5), H * (0.15 + Math.random() * 0.25)), k * 250); }
+        warp = i >= 3 ? warp : 1; break;
+      }
+      case 'satDeploy': {
+        const pr = s.pitch * Math.PI / 180, hh = stackSections(s.design, { s1: s.stage1, fair: false, sat: true }).h, off = -(hh / 2 - 13) * view.rs;
+        if (s.satellite) { s.satellite.ox = -Math.sin(pr) * off; s.satellite.oy = Math.cos(pr) * off; s.satellite.ang0 = pr; }
+        toast('🛰 위성 분리!'); sfx.sep(); break;
+      }
+      case 'msg': toast(ev.data, 'bad'); sfx.warn(); break;
+      case 'win':
+        view.celeb = 7; sfx.win(); saveRecord(s, true); warp = 1;
+        toast('🎉 임무 성공! 위성이 궤도에 배치되었습니다', 'big');
+        clearTimeout(resTimer); resTimer = setTimeout(() => showResult(true), 3600); break;
+      case 'fail':
+        view.exploded = true; view.shk = 24; explode(W / 2, H * 0.42 - view.shift, true); sfx.boom(); setRumble(0); saveRecord(s, false); warp = 1;
+        toast('💥 ' + (ev.data.code === 'crash' ? '추락!' : ev.data.code === 'breakup' ? '기체 파괴!' : '임무 실패'), 'bad');
+        clearTimeout(resTimer); resTimer = setTimeout(() => showResult(false), 2000); break;
+    }
+  }
+  s.events.length = 0;
+}
+
+/* ---------- 결과 화면 ---------- */
+function closeRes() { $('res').classList.remove('on'); }
+function showResult(win) {
+  const s = sim; if (!s) return;
+  const o = s.orbit || orbitElements(s.x, s.y, s.vx, s.vy);
+  const fuelLeft = (s.fuel2 + (s.stage1 ? s.fuel1 : 0)) / s.st.fuelTotal * 100;
+  const rows = [['비행 시간', fmtTime(s.t)], ['최고 고도', fmtDist(s.maxAlt)], ['최고 속도', fmtSpd(s.maxSpeed)], ['최대 동압 Max-Q', (s.maxQ / 1000).toFixed(0) + ' kPa'],
+    ['남은 연료', fuelLeft.toFixed(1) + ' %'], ['발사 질량', (s.st.mTotal / 1000).toFixed(1) + ' t']];
+  if (win || (o.bound && o.perigeeAlt >= 0)) rows.push(['궤도 (근지점 × 원지점)', fmtDist(o.perigeeAlt) + ' × ' + fmtDist(o.apogeeAlt)]);
+  $('resStats').innerHTML = rows.map(r => '<div class="row"><span>' + r[0] + '</span><b class="mono">' + r[1] + '</b></div>').join('');
+  const R = $('res'); R.classList.toggle('win', win); R.classList.toggle('lose', !win);
+  if (win) {
+    $('resT').textContent = '🎉 임무 성공!'; $('resS').textContent = '로켓 설계부터 위성 배치까지 모두 해냈어요. 지구 저궤도에 새 위성이 도착했습니다.';
+    $('resTip').textContent = '도전 과제: 더 가벼운 설계로 연료를 아끼거나, 자동 조종(G)을 끄고 직접 조종해 보세요. 비행 시간을 줄이면 기록이 갱신돼요!';
+    $('resActs').innerHTML = '<button class="btn pri" id="rRe">🚀 다시 발사</button><button class="btn" id="rLab">🔧 연구소로</button><button class="btn" id="rKeep">👀 계속 관측</button>';
+    $('rKeep').onclick = closeRes;
+  } else {
+    const code = s.failCode || '';
+    $('resT').textContent = '💥 임무 실패'; $('resS').textContent = s.failReason || '로켓을 잃었습니다.';
+    const tips = {
+      crash: '높이만 올라가면 다시 떨어져요. 궤도에는 옆으로 약 7.8 km/s의 속도가 필요합니다. 연료가 남아 있을 때 수평으로 충분히 가속하고, 궤도 지도의 점선이 지구에 닿지 않는지 확인하세요. (G 키 자동 조종이 도와줘요)',
+      breakup: '공기가 진한 낮은 고도에서 빠르게 날 때 기체를 너무 옆으로 기울이면 공기힘에 부러져요(받음각 30° 초과). 노란 원(속도 방향)에 기체 방향을 맞추고, 천천히 기울이세요.',
+      nofuel: '연료(Δv)가 모자랐어요. 연구소에서 탱크를 키우거나 엔진/2단 구성을 바꿔서 총 Δv를 9.4 km/s 이상으로 만들어 보세요.',
+      pad: '추력이 모자라 이륙하지 못했어요. 엔진 출력을 100%로 올리거나 TWR(추력 대 중량비)을 1.2 이상으로 설계하세요.'
+    };
+    $('resTip').textContent = '💡 ' + (tips[code] || tips.crash);
+    $('resActs').innerHTML = '<button class="btn pri" id="rRe">↻ 다시 도전</button><button class="btn" id="rLab">🔧 설계 고치기</button>';
+  }
+  $('rRe').onclick = () => startFlight(); $('rLab').onclick = () => { closeRes(); showScreen('lab'); };
+  R.classList.add('on');
+}
+
+/* ---------- HUD ---------- */
+let warnKey = '', hudT = 0;
+function getHint(s) {
+  if (s.phase === 'pad') return '발사 버튼을 누르면 10초 카운트다운이 시작돼요. 자동 조종(🤖)이 켜져 있으면 기울기를 알아서 맞춰 줍니다.';
+  if (s.phase === 'countdown') return '엔진 점화 3초 전부터 불꽃이 켜져요. 출력 슬라이더(W/S)로 힘을 조절할 수 있어요.';
+  if (s.phase === 'ended') return '실패했어요. 결과 화면에서 다시 도전해 보세요.';
+  if (s.phase === 'won') return '🎉 위성 배치 성공! 계속 관측하거나 다시 발사해 보세요.';
+  if (s.stableOrbit && s.sat) return '✔ 안정 궤도! Z 키(🛰 위성 분리)를 눌러 위성을 내보내세요.';
+  if (s.stage1 && s.hasStage2 && s.fuel1 <= 0) return '1단 연료가 떨어졌어요 — X 키로 단을 분리하세요.';
+  if (!s.hasLifted) return '이륙 중… 천천히 올라갑니다.';
+  if (s.alt < 400) return '먼저 수직으로 상승해 두꺼운 대기를 벗어납니다. 자동 조종은 약 400 m 이후부터 기울여요.';
+  if (s.alt < 60000) return s.autopilot ? '자동 조종 중: 고도에 따라 서서히 기울이고 있어요.' : '초록 눈금(추천 기울기)에 기체를 맞춰 A/D 로 천천히 기울이세요.';
+  if (s.alt < 150000 && !s.stableOrbit) return '우주 문턱! 이제 옆으로(수평) 가속해서 궤도 속도 7.8 km/s에 가까워지세요.';
+  if (!s.stableOrbit) return s.engineOn ? '수평 속도를 높이는 중 — 궤도 지도의 점선이 지구에서 떠오르면 성공이에요.' : '엔진이 꺼져 있어요. SPACE 로 다시 점화하세요.';
+  return '궤도 비행 중입니다.';
+}
+function updateHUD(s, force) {
+  const now = performance.now(); if (!force && now - hudT < 50) return; hudT = now;
+  const T = (id, v) => { const e = $(id); if (e.textContent !== v) e.textContent = v; };
+  T('vAlt', fmtDist(s.alt)); T('vSpd', fmtSpd(s.speed)); T('vAcc', (s.accNow / G0).toFixed(1) + ' G');
+  T('vVr', fmtSpd(s.vr)); T('vVt', fmtSpd(s.vt)); T('vMax', fmtDist(s.maxAlt)); T('vAoa', s.aoa.toFixed(0) + '°');
+  const tp = s.engineOn && s.ign > 0.02 ? Math.round(s.throttle * s.ign * 100) : 0;
+  T('gThrT', tp + '%'); $('gThr').style.width = tp + '%';
+  const fl = ((s.stage1 ? s.fuel1 : 0) + (s.hasStage2 ? s.fuel2 : 0)) / s.st.fuelTotal * 100;
+  T('gFuelT', fl.toFixed(0) + '%'); $('gFuel').style.width = fl + '%'; $('gFuel').style.background = fl < 10 ? 'var(--bad)' : '';
+  const vc = circularSpeed(Math.max(0, s.alt)), op = clamp(s.vt / vc * 100, 0, 100);
+  T('gOrbT', Math.round(op) + '% (' + (vc / 1000).toFixed(1) + ' km/s)'); $('gOrb').style.width = op + '%';
+  const m = massOf(s);
+  T('vNote', (s.stage1 ? '1단' : (s.hasStage2 ? '2단' : '—')) + ' · 질량 ' + (m / 1000).toFixed(1) + ' t · 동압 ' + (s.q / 1000).toFixed(0) + ' kPa');
+  T('status', s.status);
+  T('tplus', s.phase === 'pad' ? 'T-00:10' : s.phase === 'countdown' ? 'T-00:' + String(Math.max(0, Math.ceil(s.cd))).padStart(2, '0') : 'T+' + fmtTime(s.t));
+  const cur = s.missions.indexOf(false);
+  for (let i = 0; i < 5; i++) { const e = $('ms' + i); if (e) e.className = 'ms' + (s.missions[i] ? ' done' : (i === cur ? ' cur' : '')); }
+  T('hint', getHint(s));
+  // 카운트다운
+  const cd = $('cd');
+  if (s.phase === 'countdown') {
+    cd.style.display = 'block'; const n = Math.max(0, Math.ceil(s.cd));
+    if (n !== lastTick) { lastTick = n; if (n <= 10 && n > 0) sfx.tick(); }
+    T('cdN', n <= 0 ? '0' : String(n));
+  } else { cd.style.display = 'none'; lastTick = -1; }
+  $('launchWrap').style.display = s.phase === 'pad' ? 'flex' : 'none';
+  if (s.phase === 'pad') { const st = vehicleStats(design); $('launchBtn').disabled = st.twr < 1.05; if (st.twr < 1.05) $('launchMsg').textContent = 'TWR ' + st.twr.toFixed(2) + ' — 이륙 불가. 연구소에서 설계를 바꿔주세요.'; else $('launchMsg').textContent = 'TWR ' + st.twr.toFixed(2) + ' · Δv ' + (st.dvTotal / 1000).toFixed(1) + ' km/s · 자동 조종 ' + (s.autopilot ? 'ON' : 'OFF'); }
+  // 버튼 상태
+  $('bEng').classList.toggle('on', s.engineOn); $('bAuto').classList.toggle('on', s.autopilot);
+  $('bSep').disabled = !(s.phase === 'flight' && s.stage1 && s.hasStage2);
+  const canSat = s.phase === 'flight' && s.sat && s.stableOrbit; $('bSat').disabled = !(s.phase === 'flight' && s.sat); $('bSat').classList.toggle('pri', canSat);
+  $('bEng').disabled = s.phase === 'pad' || s.phase === 'ended';
+  const wh = '⏩ ×' + warp + '<small>T</small>'; if ($('bWarp').dataset.w !== wh) { $('bWarp').dataset.w = wh; $('bWarp').innerHTML = wh; }
+  if (document.activeElement !== $('thr')) $('thr').value = Math.round(s.throttle * 100);
+  T('thrV', Math.round(s.throttle * 100) + '%');
+  // 경고
+  const w = [];
+  if (s.phase === 'flight') {
+    const cf = s.stage1 ? s.fuel1 / s.st.fuel1 : (s.st.fuel2 > 0 ? s.fuel2 / s.st.fuel2 : 0);
+    if ((s.stage1 ? s.st.fuel1 : s.st.fuel2) > 0 && cf < 0.1 && cf > 0) w.push(['', '⚠ 연료 부족 — ' + (s.stage1 ? '1' : '2') + '단 ' + (cf * 100).toFixed(0) + '%']);
+    if (s.q > 8000 && s.aoa > 18) w.push(['', '⚠ 받음각 ' + s.aoa.toFixed(0) + '° — 기체가 부러질 수 있어요! 속도 방향에 맞추세요']);
+    if (s.alt < 40000 && s.vr < -30 && s.hasLifted) w.push(['', '⚠ 하강 중! 고도 ' + fmtDist(s.alt)]);
+    if (s.orbit && !s.missions[3] && s.alt > KARMAN && s.vr < 0 && s.orbit.perigeeAlt < 0 && s.alt < 150000) w.push(['y', '궤도가 지구와 만나요 — 수평 가속이 필요합니다']);
+    if (s.stageFuelEmpty && s.stage1 && s.hasStage2) w.push(['y', '1단 연료 소진 — X 키로 단 분리']);
+  }
+  const wk = w.map(x => x[0] + x[1]).join('|');
+  if (wk !== warnKey) { warnKey = wk; $('warn').innerHTML = w.map(x => '<div class="wn ' + x[0] + '">' + x[1] + '</div>').join(''); if (w.length && w[0][0] === '') sfx.warn(); }
+  drawMap(s);
+}
+
+/* ---------- 입력 ---------- */
+function toggleAuto() { if (!sim) return; sim.autopilot = !sim.autopilot; lsSet(LS.auto, sim.autopilot ? '1' : '0'); toast(sim.autopilot ? '🤖 자동 조종 ON' : '수동 조종 (A/D)'); }
+function doEngine() { if (sim && sim.phase !== 'pad') { toggleEngine(sim); } }
+function doSep() { if (sim && sim.phase === 'flight') separateStage(sim); }
+function doSat() { if (sim && sim.phase === 'flight') deploySatellite(sim); }
+function doWarp() { if (sim && (sim.phase === 'flight' || sim.phase === 'won')) { warp = cycleWarp(warp); toast('시간 가속 ×' + warp); } }
+function setPause(p) { if (!sim) return; if (p && (sim.phase === 'pad' || sim.phase === 'ended')) return; paused = p; $('pauseV').style.display = p ? 'grid' : 'none'; }
+function setHelp(on) { helpOpen = on; $('help').classList.toggle('on', on); if (screen === 'flight' && sim && sim.phase !== 'pad' && sim.phase !== 'ended') { if (on) setPause(true); else if (paused) setPause(false); } }
+function setMuted(m) { muted = m; lsSet(LS.snd, m ? '0' : '1'); $('bSnd').textContent = m ? '🔇' : '🔊'; if (m) setRumble(0); }
+function restartFlight() { if (screen === 'flight') startFlight(); }
+
+window.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.code === 'Escape') { if (helpOpen) setHelp(false); else if (screen === 'flight') setPause(!paused); return; }
+  if (screen !== 'flight' || helpOpen) return;
+  const c = e.code; let used = true;
+  if (c === 'KeyW' || c === 'ArrowUp') keys.w = 1; else if (c === 'KeyS' || c === 'ArrowDown') keys.s = 1;
+  else if (c === 'KeyA' || c === 'ArrowLeft') keys.a = 1; else if (c === 'KeyD' || c === 'ArrowRight') keys.d = 1;
+  else if (e.repeat) { if (['Space', 'KeyX', 'KeyZ', 'KeyG', 'KeyT', 'KeyR', 'KeyP', 'Enter'].includes(c)) e.preventDefault(); return; }
+  else if (c === 'Space') doEngine(); else if (c === 'KeyX') doSep(); else if (c === 'KeyZ') doSat(); else if (c === 'KeyG') toggleAuto();
+  else if (c === 'KeyT') doWarp(); else if (c === 'KeyR') restartFlight(); else if (c === 'KeyP') setPause(!paused);
+  else if (c === 'Enter') { doLaunch(); } else used = false;
+  if (used) e.preventDefault();
+  audio();
+});
+window.addEventListener('keyup', e => {
+  const c = e.code;
+  if (c === 'KeyW' || c === 'ArrowUp') keys.w = 0; else if (c === 'KeyS' || c === 'ArrowDown') keys.s = 0;
+  else if (c === 'KeyA' || c === 'ArrowLeft') keys.a = 0; else if (c === 'KeyD' || c === 'ArrowRight') keys.d = 0;
+});
+window.addEventListener('blur', () => { keys.w = keys.s = keys.a = keys.d = 0; hold.l = hold.r = hold.u = hold.d = 0; });
+function holdBtn(id, k) {
+  const b = $(id), on = e => { e.preventDefault(); hold[k] = 1; try { b.setPointerCapture(e.pointerId); } catch (x) {} audio(); }, off = () => { hold[k] = 0; };
+  b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('pointerleave', off); b.addEventListener('lostpointercapture', off);
+}
+function initUI() {
+  buildCards();
+  $('mStart').onclick = () => { audio(); startFlight(); };
+  $('mLab').onclick = () => { audio(); showScreen('lab'); };
+  $('mHelp').onclick = () => setHelp(true);
+  $('helpClose').onclick = () => setHelp(false);
+  $('help').addEventListener('click', e => { if (e.target === $('help')) setHelp(false); });
+  $('labBack').onclick = () => showScreen('menu');
+  $('goLaunch').onclick = () => { startFlight(); };
+  $('twoOn').onclick = () => { design.two = true; labPop = 1; updateLab(); };
+  $('twoOff').onclick = () => { design.two = false; labPop = 1; updateLab(); };
+  $('bSave').onclick = () => { lsSet(LS.design, JSON.stringify(design)); toastLab('💾 설계를 저장했어요'); };
+  $('bLoad').onclick = () => { const d = loadSaved(); if (d) { design = d; labPop = 1; updateLab(); toastLab('📂 저장된 설계를 불러왔어요'); } else toastLab('저장된 설계가 없어요'); };
+  $('bReset').onclick = () => { design = defaultDesign(); lsDel(LS.design); labPop = 1; updateLab(); toastLab('↺ 기본 설계로 초기화했어요 (저장된 설계도 삭제)'); };
+  $('launchBtn').onclick = doLaunch;
+  $('bEng').onclick = doEngine; $('bSep').onclick = doSep; $('bSat').onclick = doSat; $('bAuto').onclick = toggleAuto; $('bWarp').onclick = doWarp;
+  $('bPause').onclick = () => setPause(!paused); $('pvResume').onclick = () => setPause(false);
+  $('bRestart').onclick = restartFlight; $('bHelp').onclick = () => setHelp(true);
+  $('bLabF').onclick = () => { setPause(false); showScreen('lab'); }; $('pvLab').onclick = () => { setPause(false); showScreen('lab'); };
+  $('bSnd').onclick = () => setMuted(!muted);
+  holdBtn('bLeft', 'l'); holdBtn('bRight', 'r'); holdBtn('bThrUp', 'u'); holdBtn('bThrDn', 'd');
+  $('thr').addEventListener('input', e => { if (sim) sim.throttle = e.target.value / 100; });
+  $('fsBtn').onclick = () => { try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); } catch (e) {} };
+  setMuted(muted); renderRec();
+}
+let labToastT = 0;
+function toastLab(t) {
+  let e = document.getElementById('labToast');
+  if (!e) { e = document.createElement('div'); e.id = 'labToast'; e.className = 'toast'; e.style.cssText = 'position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:9;pointer-events:none;font-size:15px'; $('app').appendChild(e); }
+  e.textContent = t; e.style.display = 'block'; clearTimeout(labToastT); labToastT = setTimeout(() => e.style.display = 'none', 2400);
+}
+
+/* ---------- 메인 루프 (물리 1/60초 고정 스텝 + 렌더 분리) ---------- */
+function padCheck(s) {
+  if (s.phase === 'flight' && !s.hasLifted && s.stage1 && s.fuel1 <= 0) { s.failCode = 'pad'; fail(s, 'pad', '연료가 바닥났지만 로켓이 이륙하지 못했습니다 (추력 부족)'); }
+}
+function updateFlight(dt) {
+  const s = sim;
+  const c = { thr: (keys.w ? 1 : 0) - (keys.s ? 1 : 0) + hold.u - hold.d, pitch: (keys.d ? 1 : 0) - (keys.a ? 1 : 0) + hold.r - hold.l };
+  if (s.phase === 'pad') { applyControls(s, c, dt); return; }
+  if (s.phase === 'ended') { handleEvents(s); return; }
+  const w = (s.phase === 'flight' || s.phase === 'won') ? warp : 1;
+  accum += dt * w; let n = 0;
+  while (accum >= HS && n < 14) {
+    applyControls(s, c, HS); autopilotActions(s); step(s, HS); padCheck(s);
+    for (const ev of s.events) if (ev.type === 'fail' && ev.data) s.failCode = ev.data.code;
+    handleEvents(s); accum -= HS; n++;
+    if (s.phase === 'ended') break;
+  }
+  if (n >= 14) accum = 0;
+  if (view.celeb > 0) { view.celeb -= dt; if (Math.random() < dt * 3.2) firework(W * (0.15 + Math.random() * 0.7), H * (0.1 + Math.random() * 0.35)); if (Math.random() < dt * 25) addPart({ type: 'conf', x: Math.random() * W, y: -10, vx: (Math.random() - 0.5) * 60, vy: 60 + Math.random() * 90, life: 0, max: 5, size: 3 + Math.random() * 3, col: ['#41e0c9', '#ffd36b', '#ff7aa8', '#8ab4ff'][(Math.random() * 4) | 0], g: 20 }); }
+  setRumble(s.engineOn ? s.ign * s.throttle * 0.28 * (0.3 + 0.7 * clamp(1 - s.alt / 60000, 0, 1)) : 0);
+}
+let lastTs = 0, tAll = 0;
+function frame(ts) {
+  const dt = Math.min(0.05, Math.max(0, (ts - lastTs) / 1000) || 0.016); lastTs = ts; tAll += dt;
+  try {
+    if (screen === 'flight' && sim) {
+      if (!paused) { updateFlight(dt); updateParts(dt); }
+      renderFlight(sim, tAll, paused ? 0 : dt); updateHUD(sim);
+    } else if (screen === 'lab') renderLab(tAll, dt);
+    else renderMenu(tAll);
+  } catch (err) { if (!frame.err) { frame.err = 1; console.error(err); } }
+  requestAnimationFrame(frame);
+}
+window.addEventListener('resize', () => { resize(); updateLabRect(); if (sim) setViewScale(); });
+window.addEventListener('orientationchange', () => setTimeout(() => { resize(); updateLabRect(); if (sim) setViewScale(); }, 200));
+window.__RL = { adv(sec) { for (let i = 0; i < sec * 60; i++) { updateFlight(HS); if (sim.phase === "ended") break; } }, get sim() { return sim; }, get design() { return design; }, set design(d) { design = d; }, startFlight, doLaunch, handleEvents };
+resize(); initUI(); showScreen('menu'); requestAnimationFrame(frame);
+</script>
+</body>
+</html>
